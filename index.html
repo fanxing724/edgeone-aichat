@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f5f6fa" />
-  <title>DeepSeek AI Studio</title>
+  <title>AI 剧场 · 沉浸式角色演绎</title>
   <style>
     :root { color-scheme: light dark; --bg:#f4f5f9; --panel:rgba(255,255,255,.66); --solid:#fff; --text:#1d1d25; --muted:#7a7b89; --line:rgba(25,28,44,.10); --blue:#4567f6; --blue2:#6b8aff; --bubble:#e9edff; --shadow:0 20px 50px rgba(45,51,91,.12); --danger:#db4557; --green:#20a66f; }
     @media (prefers-color-scheme: dark) { :root { --bg:#14151c; --panel:rgba(30,31,42,.68); --solid:#20212a; --text:#f2f3f9; --muted:#a2a4b4; --line:rgba(255,255,255,.12); --blue:#7890ff; --blue2:#9eadff; --bubble:#283151; --shadow:0 20px 50px rgba(0,0,0,.32); --danger:#ff7181; --green:#48c993; } }
@@ -16,8 +16,9 @@
     .brand { display:flex; align-items:center; gap:10px; padding:4px 8px 10px; font-weight:700; letter-spacing:-.02em; }
     .brand-mark { width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(145deg,var(--blue2),var(--blue));color:#fff;box-shadow:0 6px 15px rgba(69,103,246,.35); }
     .icon-btn { width:34px; height:34px; border:0; border-radius:11px; color:var(--muted); background:transparent; display:grid; place-items:center; } .icon-btn:hover { background:rgba(120,130,170,.12); color:var(--text); }
-    .side-head { display:flex; justify-content:space-between; align-items:center; padding:0 6px; } .side-head span { font-size:13px; color:var(--muted); font-weight:600; }
+    .side-head { display:flex; justify-content:space-between; align-items:center; padding:0 6px; } .side-head > span:first-child { font-size:13px; color:var(--muted); font-weight:600; } .side-actions{display:flex;gap:2px}.side-actions .icon-btn{width:30px;height:30px}
     .agent-list { overflow:auto; display:flex; flex-direction:column; gap:4px; padding:0 2px; }
+    .builtin-tag{margin-left:5px;padding:1px 5px;border-radius:6px;font-size:9px;font-style:normal;font-weight:700;letter-spacing:.03em;color:var(--blue);background:color-mix(in srgb,var(--blue) 13%,transparent);vertical-align:1px}
     .agent { border:1px solid transparent; border-radius:16px; padding:10px; display:flex; gap:10px; align-items:center; text-align:left; color:var(--text); background:transparent; width:100%; } .agent:hover { background:rgba(130,140,180,.1); } .agent.active { background:var(--solid); border-color:var(--line); box-shadow:0 5px 14px rgba(25,30,60,.06); }
     .avatar { width:36px;height:36px;flex:none;border-radius:13px;display:grid;place-items:center;color:#fff;font-size:18px;background:linear-gradient(145deg,#9a8cff,#5d72fb); } .agent-info { min-width:0; flex:1; }.agent-name { font-size:14px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }.agent-desc {font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .side-foot { margin-top:auto; border-top:1px solid var(--line); padding-top:12px; } .settings-row { width:100%; border:0; background:transparent; color:var(--text); padding:10px 8px; display:flex;align-items:center;gap:9px;text-align:left;border-radius:11px;}.settings-row:hover {background:rgba(130,140,180,.1)}.key-dot { margin-left:auto; width:8px;height:8px;border-radius:50%;background:var(--danger);}.key-dot.ready{background:var(--green);box-shadow:0 0 0 4px color-mix(in srgb,var(--green) 15%,transparent);}
@@ -27,6 +28,11 @@
     .bubble pre{overflow:auto;background:#151720;color:#eff2ff;padding:12px;border-radius:10px;font-size:12px;line-height:1.55}.bubble code{font-family:"SFMono-Regular",Consolas,monospace;background:color-mix(in srgb,var(--blue) 10%,transparent);padding:1px 4px;border-radius:4px}.bubble pre code{background:none;padding:0}.bubble blockquote{margin:8px 0;border-left:3px solid var(--blue);padding-left:10px;color:var(--muted)}.bubble h1,.bubble h2,.bubble h3{line-height:1.3;margin:12px 0 7px}.bubble h1{font-size:18px}.bubble h2{font-size:16px}.bubble h3{font-size:14px}.bubble p{margin:0 0 8px}.bubble p:last-child{margin-bottom:0}.bubble ul{padding-left:19px;margin:7px 0}.thinking .bubble{color:var(--muted);display:flex;align-items:center;gap:8px}.dots{display:inline-flex;gap:3px}.dots i{width:5px;height:5px;border-radius:50%;background:var(--blue);animation:bounce 1s infinite alternate}.dots i:nth-child(2){animation-delay:.18s}.dots i:nth-child(3){animation-delay:.36s}@keyframes bounce{to{transform:translateY(-5px);opacity:.4}}
     .composer-wrap{padding:12px max(24px,calc((100% - 900px)/2)) 19px;background:linear-gradient(transparent,var(--bg) 38%)}.composer {background:var(--panel);backdrop-filter:blur(26px) saturate(140%);border:1px solid var(--line);border-radius:20px;padding:10px;box-shadow:var(--shadow);}.composer textarea{display:block;width:100%;border:0;resize:none;outline:none;background:transparent;color:var(--text);padding:5px 7px;min-height:43px;max-height:145px;line-height:1.5}.composer-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:1px 2px 0 4px}.memory-switch{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:12px;user-select:none}.memory-switch input{accent-color:var(--blue)}.send{width:36px;height:32px;border:0;border-radius:11px;background:var(--blue);color:#fff;display:grid;place-items:center;box-shadow:0 5px 12px rgba(69,103,246,.28)}.send:hover{background:#3659f1}.send:disabled{box-shadow:none}.shortcut{font-size:11px;color:var(--muted)}
     .overlay{display:none}.modal-layer{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(20,22,34,.32);backdrop-filter:blur(8px);z-index:20}.modal-layer.show{display:flex}.modal{width:min(560px,100%);max-height:90vh;overflow:auto;background:var(--solid);border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.22)}.modal h2{font-size:19px;margin:0 0 4px}.modal .hint{color:var(--muted);font-size:13px;margin:0 0 20px;line-height:1.5}.form-group{margin:13px 0}.form-group label{display:block;font-size:12px;font-weight:650;margin-bottom:6px;color:var(--muted)}.form-group input,.form-group textarea,.form-group select{width:100%;border:1px solid var(--line);border-radius:11px;background:color-mix(in srgb,var(--solid) 85%,var(--bg));color:var(--text);outline:none;padding:10px 11px}.form-group textarea{min-height:90px;resize:vertical;line-height:1.5}.key-input{display:flex}.key-input input{border-radius:11px 0 0 11px;border-right:0}.key-input button{width:45px;border:1px solid var(--line);border-radius:0 11px 11px 0;background:var(--panel);color:var(--muted)}.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}.btn{border:0;border-radius:11px;padding:10px 14px;font-size:13px}.btn.ghost{color:var(--text);background:rgba(130,140,180,.12)}.btn.primary{color:#fff;background:var(--blue)}.btn.danger{color:#fff;background:var(--danger)}.form-note{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.45}.status-card{display:flex;align-items:center;gap:9px;padding:11px;border-radius:12px;background:color-mix(in srgb,var(--green) 10%,transparent);font-size:13px;color:var(--green)}
+    .privacy-card{display:flex;gap:9px;align-items:flex-start;margin:0 0 16px;padding:11px;border-radius:12px;background:color-mix(in srgb,var(--blue) 9%,transparent);font-size:12px;line-height:1.6;color:var(--text)}.privacy-card b{display:block;margin-bottom:2px;font-size:12.5px}
+    .lib-list{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto;margin:6px 0 0}.lib-item{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:13px;background:color-mix(in srgb,var(--bg) 42%,transparent)}.lib-avatar{width:36px;height:36px;flex:none;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#9a8cff,#5d72fb);color:#fff;font-size:17px}.lib-info{min-width:0;flex:1}.lib-name{font-size:13.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lib-desc{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lib-add{flex:none;border:1px solid var(--line);background:var(--blue);color:#fff;border-radius:9px;padding:6px 12px;font-size:12px}.lib-add:disabled{background:transparent;color:var(--muted);opacity:.7}
+    .model-picker{display:flex;gap:6px;align-items:center}.model-picker select{flex:1;min-width:0}.model-picker button{flex:none;height:38px;padding:0 12px;border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--text);font-size:12px}.model-picker button:hover{border-color:var(--blue);color:var(--blue)}
+    .seg-tabs{display:flex;gap:4px;padding:4px;border-radius:13px;background:color-mix(in srgb,var(--text) 6%,transparent);margin-bottom:16px}.seg-tab{flex:1;border:0;background:transparent;color:var(--muted);border-radius:10px;padding:9px 2px;font-size:13px;font-weight:650;transition:.18s}.seg-tab.active{background:var(--solid);color:var(--text);box-shadow:0 3px 10px rgba(25,30,60,.08)}.seg-tab:hover{color:var(--text)}
+    .adv{margin-top:6px;border-top:1px solid var(--line);padding-top:12px}.adv summary{cursor:pointer;font-size:12.5px;font-weight:650;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px}.adv summary::-webkit-details-marker{display:none}.adv summary::before{content:'▸';transition:transform .18s;display:inline-block}.adv[open] summary::before{transform:rotate(90deg)}.adv summary:hover{color:var(--text)}.adv .form-group:first-of-type{margin-top:14px}
     .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:#252633;color:#fff;padding:11px 14px;border-radius:12px;font-size:13px;box-shadow:0 12px 30px rgba(0,0,0,.22);opacity:0;transition:.22s;pointer-events:none;z-index:40;max-width:calc(100% - 36px)}.toast.show{opacity:1;transform:translate(-50%,0)}
     @media(max-width:720px){
       body{background:radial-gradient(circle at 90% -10%,rgba(113,138,255,.26),transparent 18rem),var(--bg)}
@@ -107,9 +113,9 @@
 <body>
   <div class="app">
     <aside class="sidebar" id="sidebar">
-      <div class="brand"><div class="brand-mark">✦</div> DeepSeek 剧场</div>
+      <div class="brand"><div class="brand-mark">✦</div> AI 剧场</div>
       <div class="mode-switch" id="modeSwitch"><button class="mode-btn active" data-mode="rp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5c3.4 0 6 2.3 6 5.4 0 1.7-.8 3.1-2 4-.4 1.8-1.6 3-3.9 3s-3.5-1.2-3.9-3c-1.2-.9-2-2.3-2-4 0-3.1 2.6-5.4 6-5.4z"/><path d="M9.4 9.4c.3 0 .5.2.5.5"/><path d="M14.1 9.4c.3 0 .5.2.5.5"/><path d="M9.8 13.2c.6-.5 1.4-.8 2.2-.8s1.6.3 2.2.8"/></svg><span>剧情演绎</span></button><button class="mode-btn" data-mode="worldbook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6C10.5 5 9 4.5 7 4.5S3.5 5 2 6v11.5c1.5-1 3-1.5 5-1.5s3.5.5 5 1.5c1.5-1 3-1.5 5-1.5s3.5.5 5 1.5V6c-1.5-1-3-1.5-5-1.5S13.5 5 12 6z"/><path d="M12 6v11.5"/><path d="M7.5 8.5c1.2-.3 2.3-.3 3.5 0"/><path d="M16.5 8.5c-1.2-.3-2.3-.3-3.5 0"/><path d="M7.5 11c1.2-.3 2.3-.3 3.5 0"/><path d="M16.5 11c-1.2-.3-2.3-.3-3.5 0"/></svg><span>世界书</span></button></div>
-      <div class="side-head"><span>我的智能体</span><button class="icon-btn" id="addAgent" title="创建智能体">＋</button></div>
+      <div class="side-head"><span>我的角色</span><span class="side-actions"><button class="icon-btn" id="openLibrary" title="内置角色库">☰</button><button class="icon-btn" id="addAgent" title="创建角色">＋</button></span></div>
       <div class="agent-list" id="agentList"></div>
       <div class="side-foot"><button class="settings-row" id="openSettings"><span>⚙︎</span> API 设置 <i class="key-dot" id="keyDot"></i></button></div>
     </aside>
@@ -130,8 +136,11 @@
 
     const defaults = [{id:'default',name:'雾城引路人',emoji:'✦',description:'沉浸式角色演绎 · 雾城篇',baseDirective:'',persona:'你是雾城的引路人，敏锐、克制、略带神秘感。你善于通过细节、对话和行动推动剧情。',userProfile:'你是失忆的旅人，正在雾城中寻找自己丢失的过去。',initialScene:'深夜的雾城街头，浓雾让人看不清三步之外。你与引路人并肩站在一座老旧的钟楼下。',relationship:'你是我的向导，也是唯一知道我失忆前秘密的人。'}];
 
-    const state = {agents:[], activeId:'default', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'https://api.deepseek.com', model:'deepseek-v4-flash', thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, attachment:null, mode:'rp'};
-    const storeKey = 'deepseek-ai-studio-v1';
+    const state = {agents:[], activeId:'default', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'/api', model:'@makers/deepseek-v4-flash', builtinReady:null, builtinCards:[], hiddenBuiltins:[], modelList:[], thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, attachment:null, mode:'rp'};
+    // 网关内置免费模型（平台侧不提供 /models 接口，故在此维护；绑定自有厂商密钥后可用 provider/model 形式调用任意模型）
+    const BUILTIN_MODELS = ['@makers/deepseek-v4-flash','@makers/deepseek-v4-pro','@makers/hy3','@makers/hy3-preview','@makers/minimax-m2.7','@makers/minimax-m3','@makers/kimi-k2.6'];
+    const DEFAULT_MODEL = '@makers/deepseek-v4-flash';
+    const storeKey = 'ai-theater-v1';
     const ICON_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
     const ICON_REGEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>';
     const ICON_UNDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>';
@@ -140,13 +149,17 @@
     function safeParse(raw, fallback){ try { const data=JSON.parse(raw); return data && typeof data==='object' ? data : fallback; } catch { return fallback; } }
 
     function loadState(){
+      // 一次性迁移：从旧版存储键搬运数据，避免改名后丢失已有角色与剧情
+      try{ if(!localStorage.getItem(storeKey) && localStorage.getItem('deepseek-ai-studio-v1')){ localStorage.setItem(storeKey, localStorage.getItem('deepseek-ai-studio-v1')); if(localStorage.getItem('deepseek-ai-studio-v1-key')) localStorage.setItem(storeKey+'-key', localStorage.getItem('deepseek-ai-studio-v1-key')); } }catch{}
       const saved = safeParse(localStorage.getItem(storeKey), {});
-      state.agents = Array.isArray(saved.agents) && saved.agents.length ? saved.agents : defaults;
-      state.activeId = state.agents.some(a=>a.id===saved.activeId) ? saved.activeId : state.agents[0].id;
+      state.agents = Array.isArray(saved.agents) ? saved.agents : [];
+      state.hiddenBuiltins = Array.isArray(saved.hiddenBuiltins) ? saved.hiddenBuiltins : [];
+      state.modelList = Array.isArray(saved.modelList) ? saved.modelList.filter(m=>typeof m==='string') : [];
+      state.activeId = typeof saved.activeId==='string' ? saved.activeId : '';
       state.chats = saved.chats && typeof saved.chats==='object' ? saved.chats : {};
       state.play = saved.play && typeof saved.play==='object' ? saved.play : {};
       state.globalPrompt = typeof saved.globalPrompt==='string' ? saved.globalPrompt : '';
-      state.model = typeof saved.model==='string' && saved.model.trim() ? saved.model.trim() : 'deepseek-v4-flash';
+      state.model = typeof saved.model==='string' && saved.model.trim() ? saved.model.trim() : DEFAULT_MODEL;
       state.thinking = ['off','high','max'].includes(saved.thinking) ? saved.thinking : 'off';
       state.temperature = typeof saved.temperature==='number' ? saved.temperature : 1.3;
       state.topP = typeof saved.topP==='number' ? saved.topP : 0.9;
@@ -154,24 +167,88 @@
       state.repeatThreshold = typeof saved.repeatThreshold==='number' ? saved.repeatThreshold : 0.55;
       state.memory = saved.memory !== false;
       state.mode = saved.mode==='worldbook' ? 'worldbook' : 'rp';
-      state.apiBase = typeof saved.apiBase==='string' && saved.apiBase.trim() ? saved.apiBase.trim().replace(/\/+$/,'') : 'https://api.deepseek.com';
+      state.apiBase = typeof saved.apiBase==='string' && saved.apiBase.trim() ? saved.apiBase.trim().replace(/\/+$/,'') : '/api';
       state.apiKey = '';
       try { const encrypted = localStorage.getItem(storeKey+'-key'); if(encrypted) state.apiKey = atob(encrypted); } catch {}
+      // 迁移旧默认配置：无自定义密钥时，自动切换到 EdgeOne Makers 网关（内置模型开箱即用）
+      if(state.apiBase==='https://api.deepseek.com' && !state.apiKey){ state.apiBase='/api'; if(state.model==='deepseek-v4-flash'||state.model==='deepseek-chat') state.model=DEFAULT_MODEL; }
     }
 
     function saveState(){
-      const clean = {agents:state.agents, activeId:state.activeId, chats:state.chats, play:state.play, globalPrompt:state.globalPrompt, apiBase:state.apiBase, model:state.model, thinking:state.thinking, temperature:state.temperature, topP:state.topP, antiRepeat:state.antiRepeat, repeatThreshold:state.repeatThreshold, memory:state.memory, mode:state.mode, savedAt:now(), version:2};
+      const clean = {agents:state.agents, hiddenBuiltins:state.hiddenBuiltins, modelList:state.modelList, activeId:state.activeId, chats:state.chats, play:state.play, globalPrompt:state.globalPrompt, apiBase:state.apiBase, model:state.model, thinking:state.thinking, temperature:state.temperature, topP:state.topP, antiRepeat:state.antiRepeat, repeatThreshold:state.repeatThreshold, memory:state.memory, mode:state.mode, savedAt:now(), version:2};
       try { localStorage.setItem(storeKey, JSON.stringify(clean)); } catch(e){ toast('保存失败：本地存储空间不足'); }
       if(state.apiKey) localStorage.setItem(storeKey+'-key', btoa(state.apiKey));
       else localStorage.removeItem(storeKey+'-key');
       updateKeyStatus();
     }
 
-    function activeAgent(){ return state.agents.find(a=>a.id===state.activeId)||state.agents[0]; }
-    function apiEndpoint(){ let base=(state.apiBase||'https://api.deepseek.com').trim().replace(/\/+$/,''); if(/\/chat\/completions$/i.test(base)) return base; return base+'/chat/completions'; }
+    // 内置卡（服务端 KV 下发）与本地卡合并：内置卡顺序固定在前，本地编辑过的用副本覆盖
+    function allAgents(){
+      const mine=state.agents||[], hidden=new Set(state.hiddenBuiltins||[]), builtin=state.builtinCards||[];
+      const byId=new Map(mine.map(a=>[a.id,a]));
+      const out=[];
+      for(const b of builtin){ if(hidden.has(b.id)) continue; out.push(byId.has(b.id)?byId.get(b.id):b); }
+      for(const a of mine) if(!builtin.some(b=>b.id===a.id)) out.push(a);
+      return out;
+    }
+    function isBuiltinId(id){ return (state.builtinCards||[]).some(b=>b.id===id); }
+    function activeAgent(){ const list=allAgents(); return list.find(a=>a.id===state.activeId)||list[0]||defaults[0]; }
+    async function loadBuiltinCards(){
+      try{
+        const res=await fetch('/api/cards'); if(!res.ok) return;
+        const data=await res.json();
+        if(Array.isArray(data.cards)&&data.cards.length) state.builtinCards=data.cards.filter(c=>c&&c.id&&c.name);
+      }catch{}
+      if(!allAgents().length) state.agents=defaults.map(a=>({...a}));
+      const list=allAgents(); if(!list.some(a=>a.id===state.activeId)) state.activeId=list[0]?.id||'';
+    }
+    function apiEndpoint(){ let base=(state.apiBase||'/api').trim().replace(/\/+$/,''); if(/\/chat\/completions$/i.test(base)) return base; return base+'/chat/completions'; }
     function chat(){ if(!Array.isArray(state.chats[state.activeId])) state.chats[state.activeId]=[]; return state.chats[state.activeId]; }
     function play(){ if(!state.play) state.play={}; if(!state.play[state.activeId]) state.play[state.activeId]={roleState:'',scene:'',summaries:[],summarizedUpTo:0}; const p=state.play[state.activeId]; if(typeof p.summary==='string'&&p.summary){ if(!Array.isArray(p.summaries)||!p.summaries.length) p.summaries=[p.summary]; delete p.summary; } if(!Array.isArray(p.summaries)) p.summaries=[]; return p; }
     function escapeHtml(text){ return String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+
+    // 解析酒馆（SillyTavern）PNG 角色卡：tEXt 块 chara(V2)/ccv3(V3) 内为 base64 JSON
+    function parsePngCharaCard(buffer){
+      try{
+        const bytes=new Uint8Array(buffer);
+        if(bytes.length<8||bytes[0]!==0x89||bytes[1]!==0x50||bytes[2]!==0x4e||bytes[3]!==0x47)return null;
+        const view=new DataView(buffer);let off=8;const texts={};
+        while(off+12<=bytes.length){
+          const len=view.getUint32(off);
+          if(off+12+len>bytes.length)break;
+          const type=String.fromCharCode(bytes[off+4],bytes[off+5],bytes[off+6],bytes[off+7]);
+          if(type==='tEXt'){
+            const start=off+8;let z=-1;
+            for(let i=start;i<start+len;i++){if(bytes[i]===0){z=i;break;}}
+            if(z>0)texts[new TextDecoder().decode(bytes.subarray(start,z))]=new TextDecoder().decode(bytes.subarray(z+1,start+len));
+          }
+          off+=12+len;
+        }
+        const raw=texts.ccv3||texts.chara;
+        if(!raw)return null;
+        const bin=atob(raw.replace(/\s+/g,''));
+        return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin,c=>c.charCodeAt(0))));
+      }catch{return null;}
+    }
+
+    // 统一映射外部角色卡（酒馆 V2/V3 或自定义 JSON）到表单字段
+    function normalizeImportCard(src){
+      if(!src||typeof src!=='object')return {};
+      const d=src.data&&typeof src.data==='object'?src.data:{};
+      const pick=(...vals)=>{for(const v of vals){if(typeof v==='string'&&v.trim())return v.trim();}return '';};
+      const isST=!!(src.first_mes||src.char_greeting||d.first_mes||(src.data&&d.name));
+      if(!isST)return {name:pick(src.name,src.characterName),emoji:pick(src.emoji),description:pick(src.description,src.summary),baseDirective:pick(src.baseDirective,src.directive),persona:pick(src.persona,src.personality,src.character),initialScene:pick(src.initialScene,src.scene),relationship:pick(src.relationship),userProfile:pick(src.userProfile,src.userPersona,src.myProfile)};
+      const greeting=pick(src.first_mes,d.first_mes,Array.isArray(d.alternate_greetings)?String(d.alternate_greetings[0]||''):'');
+      const persona=[pick(src.description,d.description),pick(src.personality,d.personality)&&('【性格】'+pick(src.personality,d.personality)),pick(src.mes_example,d.mes_example)&&('【对话风格示例】'+pick(src.mes_example,d.mes_example))].filter(Boolean).join('\n\n');
+      const scene=[pick(src.scenario,d.scenario),greeting&&('【开场白参考】'+greeting)].filter(Boolean).join('\n\n');
+      const tags=Array.isArray(d.tags)?d.tags.filter(t=>typeof t==='string'):Array.isArray(src.tags)?src.tags.filter(t=>typeof t==='string'):[];
+      return {name:pick(d.name,src.name),description:pick(src.creator_notes,d.creator_notes,tags.slice(0,4).join(' · ')).slice(0,60),persona,initialScene:scene};
+    }
+
+    function fillFormFromCard(card){
+      const fields={name:'agentName',emoji:'agentEmoji',description:'agentDesc',baseDirective:'baseDirective',persona:'agentPersona',initialScene:'initialScene',relationship:'agentRelationship',userProfile:'userProfile'};
+      Object.entries(fields).forEach(([key,id])=>{const v=card[key];if(v!==undefined&&v!==null&&String(v).trim())$('#'+id).value=typeof v==='string'?v:JSON.stringify(v);});
+    }
 
     // 从 AI 回复中解析出【状态】【场景】，其余归为正文
     function parseReply(content){
@@ -232,7 +309,7 @@
 
     function relative(ts){ const sec=Math.max(0,Math.floor((now()-ts)/1000)); if(sec<45)return '刚刚'; if(sec<3600)return Math.floor(sec/60)+' 分钟前'; if(sec<86400)return Math.floor(sec/3600)+' 小时前'; return new Date(ts).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'}); }
 
-    function renderAgents(){ $('#agentList').innerHTML=state.agents.map(a=>`<button class="agent ${a.id===state.activeId?'active':''}" data-agent="${a.id}"><div class="avatar">${escapeHtml(a.emoji||'✦')}</div><div class="agent-info"><div class="agent-name">${escapeHtml(a.name)}</div><div class="agent-desc">${escapeHtml(a.description||'未设置人设')}</div></div></button>`).join(''); $('#agentList').querySelectorAll('[data-agent]').forEach(el=>el.onclick=()=>{state.activeId=el.dataset.agent;saveState();render();closeSide();}); }
+    function renderAgents(){ $('#agentList').innerHTML=allAgents().map(a=>`<button class="agent ${a.id===state.activeId?'active':''}" data-agent="${a.id}"><div class="avatar">${escapeHtml(a.emoji||'✦')}</div><div class="agent-info"><div class="agent-name">${escapeHtml(a.name)}${isBuiltinId(a.id)?'<i class="builtin-tag">内置</i>':''}</div><div class="agent-desc">${escapeHtml(a.description||'未设置人设')}</div></div></button>`).join(''); $('#agentList').querySelectorAll('[data-agent]').forEach(el=>el.onclick=()=>{state.activeId=el.dataset.agent;saveState();render();closeSide();}); }
 
     function renderMessages(){ const list=chat(), agent=activeAgent(), host=$('#messages'); if(!list.length){ host.innerHTML=`<div class="empty"><div class="empty-orb">${escapeHtml(agent.emoji||'✦')}</div><h2>你好，我是${escapeHtml(agent.name)}</h2><div class="role-card"><span>剧情初始环境</span><p>${escapeHtml(agent.initialScene||agent.description||'故事正等待你的选择。')}</p></div><div class="suggestions"><button class="suggestion">从开场继续</button><button class="suggestion">让冲突升级</button><button class="suggestion">描述周围的细节</button></div></div>`; host.querySelectorAll('.suggestion').forEach(b=>b.onclick=()=>{$('#prompt').value=b.textContent;$('#prompt').focus();}); return; } host.innerHTML=list.map(m=>`<article class="message ${m.role==='user'?'user':''}" data-id="${m.id}"><div class="msg-body"><div class="msg-meta"><span class="who"><i class="mini-avatar">${m.role==='user'?'我':escapeHtml(agent.emoji||'✦')}</i>${m.role==='user'?'你':escapeHtml(agent.name)}</span><span>·</span><time title="${new Date(m.createdAt).toLocaleString('zh-CN')}">${relative(m.createdAt)}</time></div><div class="bubble">${markdown(m.displayContent||m.content)}</div><div class="message-actions"><button data-action="copy" title="复制">${ICON_COPY}</button>${m.role==='assistant'?'<button data-action="regen" title="重新生成">'+ICON_REGEN+'</button>':''}${m.role==='user'?'<button data-action="undo" title="撤回">'+ICON_UNDO+'</button>':''}</div></div></article>`).join(''); host.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>messageAction(b.closest('.message').dataset.id,b.dataset.action)); host.scrollTop=host.scrollHeight; }
 
@@ -245,7 +322,8 @@
 
     function render(){ document.querySelector('.app').dataset.mode = state.mode; document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===state.mode)); const agent=activeAgent(); const p=play(); if(state.mode==='worldbook'){ $('#chatTitle').textContent='世界书'; $('#chatSubtitle').textContent='多角色 · 事件进展 · 正反派 · 剧情'; } else { if(!p._init){ p._init=true; if(!p.scene) p.scene=agent.initialScene||''; } $('#chatAvatar').textContent=agent.emoji||'✦';$('#chatTitle').textContent=agent.name;$('#chatSubtitle').textContent=agent.relationship||agent.description||'未设置角色关系'; } $('#memoryToggle').checked=state.memory; renderAgents();renderMessages();renderStatus();updateKeyStatus(); }
 
-    function updateKeyStatus(){ $('#keyDot').classList.toggle('ready',!!state.apiKey); $('#keyDot').title=state.apiKey?'API 密钥已设置':'未设置 API 密钥'; }
+    function updateKeyStatus(){ const proxy=state.apiBase.startsWith('/'); const ready=!!state.apiKey||(proxy&&state.builtinReady!==false); $('#keyDot').classList.toggle('ready',ready); $('#keyDot').title=state.apiKey?'使用自定义 API Key':(proxy?(state.builtinReady===false?'服务端未配置 MAKERS_MODELS_KEY 环境变量':'使用 EdgeOne Makers 内置模型（无需密钥）'):'未设置 API 密钥'); }
+    async function refreshGatewayStatus(){ if(!state.apiBase.startsWith('/')) return; try{ const res=await fetch('/api/status'); if(!res.ok) return; const data=await res.json(); state.builtinReady=!!data.builtin; updateKeyStatus(); }catch{} }
 
     function toast(msg){ const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),2600); }
 
@@ -273,7 +351,7 @@
       return blocks.filter(Boolean).join('\n\n');
     }
 
-    function classifyError(e){ const msg=String(e.message||e); if(/401|403|unauthorized|permission/i.test(msg))return '密钥无效或没有访问权限，请检查 API Key。'; if(/402|insufficient|balance/i.test(msg))return '账户余额不足，请前往 DeepSeek 平台充值。'; if(/429|rate limit/i.test(msg))return '请求过于频繁或额度已用尽，请稍后再试。'; if(/model not exist|invalid model/i.test(msg))return '模型名称无效，请在设置中重新选择模型。'; if(/network|fetch|failed to fetch/i.test(msg))return '网络请求失败，请检查网络连接或浏览器跨域限制。'; return '请求失败：'+msg.slice(0,100); }
+    function classifyError(e){ const msg=String(e.message||e); const m=msg.match(/^\s*\d{3}\s*([\s\S]*)$/); const detail=(m&&m[1]||'').trim(); if(/401|403|unauthorized|permission/i.test(msg))return detail?'鉴权失败：'+detail.slice(0,140):'密钥无效或没有访问权限，请检查 API Key。'; if(/402|insufficient|balance/i.test(msg))return '账户余额不足或内置模型额度已用尽，请充值或更换模型。'; if(/429|rate limit/i.test(msg))return '请求过于频繁或额度已用尽，请稍后再试。'; if(/model not exist|invalid model/i.test(msg))return '模型名称无效，请在设置中重新选择模型。'; if(/network|fetch|failed to fetch/i.test(msg))return '网络请求失败，请检查网络连接或浏览器跨域限制。'; return '请求失败：'+msg.slice(0,140); }
 
     function renderAttachment(){
       const preview=$('#attachmentPreview'), nameEl=$('#attachmentName');
@@ -300,10 +378,12 @@
       return payload;
     }
 
-    async function streamDeepSeek(payload, onDelta){
+    async function streamChat(payload, onDelta){
+      const reqHeaders = {'Content-Type':'application/json'};
+      if(state.apiKey) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
       const res = await fetch(apiEndpoint(), {
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.apiKey},
+        headers:reqHeaders,
         body: JSON.stringify(payload)
       });
       if(!res.ok){
@@ -345,7 +425,7 @@
       text = text.trim();
       const attachment = state.attachment;
       if((!text && !attachment) || state.busy) return;
-      if(!state.apiKey){ openSettings(); toast('请先设置 DeepSeek API 密钥'); return; }
+      if(!state.apiKey && !state.apiBase.startsWith('/')){ openSettings(); toast('请先设置 API 密钥，或将 API 地址设为 /api 使用内置模型'); return; }
       const messages = chat();
       let userRepeatNote = '';
       if(!regenerate){
@@ -387,7 +467,7 @@
         let attempt = 0, note = userRepeatNote, reply = '';
         while(attempt < 2){
           attempt++;
-          reply = await streamDeepSeek(buildPayload(note), paint);
+          reply = await streamChat(buildPayload(note), paint);
           const parsed = parseReply(reply);
           if(state.antiRepeat && attempt === 1){
             const prev = messages.filter(m=>m.role==='assistant' && m.id!=='thinking').slice(-2).map(m=>m.content||'');
@@ -405,7 +485,6 @@
           break;
         }
         saveState(); renderMessages(); renderStatus();
-        maybeAutoSummarize();
       } catch(e){
         const ix = messages.indexOf(thinking);
         if(ix > -1) messages.splice(ix, 1);
@@ -413,6 +492,7 @@
         toast(classifyError(e));
       } finally {
         state.busy = false; $('#sendButton').disabled = false;
+        maybeAutoSummarize();
       }
     }
 
@@ -425,7 +505,60 @@
       const thinkOpts = [['off','关闭思考（推荐 · 防重复）'],['high','高思考强度（更深入）'],['max','最高思考强度（最慢）']].map(([v,label])=>'<option value="'+v+'" '+(state.thinking===v?'selected':'')+'>'+label+'</option>').join('');
       const temp = Number(state.temperature ?? 1.3);
       const topP = Number(state.topP ?? 0.9);
-      openModal(`<h2>API 与演绎设置</h2><p class="hint">使用你自己的 DeepSeek API Key。密钥只保存在此浏览器的本地设备中。</p><div class="status-card">● ${state.apiKey?'API Key 已设置，可直接开始对话':'尚未设置 API Key'}</div><div class="form-group"><label>DeepSeek API Key</label><div class="key-input"><input id="apiKeyInput" type="password" placeholder="sk-…" value="${escapeHtml(state.apiKey)}"><button id="toggleKey" title="显示或隐藏密钥">◉</button></div><div class="form-note">保存时会进行本地编码存储。Web 页面无法等同于 Android Keystore 的硬件级安全保护。</div></div><div class="form-group"><label>API 地址（OpenAI 兼容 Base URL）</label><input id="apiBaseInput" type="text" placeholder="https://api.deepseek.com 或你的中转/代理地址" value="${escapeHtml(state.apiBase||'')}"><div class="form-note">默认使用 DeepSeek 官方接口。可改为任意 OpenAI 兼容服务的地址（会自动补全 /chat/completions），API Key 与模型名需与之一致。</div></div><div class="form-group"><label>模型名称</label><input id="modelInput" list="modelList" placeholder="deepseek-v4-flash" value="${escapeHtml(state.model)}"><datalist id="modelList"><option value="deepseek-v4-flash"></option><option value="deepseek-v4-pro"></option><option value="deepseek-chat"></option><option value="deepseek-reasoner"></option><option value="deepseek-v3"></option></datalist><div class="form-note">可自由填写任意模型名，也可从预设中快速选择。</div></div><div class="form-group"><label>思考模式</label><select id="thinkingInput">${thinkOpts}</select><div class="form-note">关闭思考后回复最快、最不易重复；思考模式会让模型先推理再回答，但更容易出现重复与套话。</div></div><div class="form-group"><label>随机性 temperature <small id="tempVal">${temp}</small></label><input id="tempInput" type="range" min="0" max="2" step="0.1" value="${temp}"><div class="form-note">越高越有创意、越不易重复（仅关闭思考时生效）。角色演绎建议 1.2～1.5。</div></div><div class="form-group"><label>采样范围 top_p <small id="topPVal">${topP}</small></label><input id="topPInput" type="range" min="0" max="1" step="0.05" value="${topP}"><div class="form-note">配合 temperature 使用，建议 0.85～0.95。</div></div><div class="form-group"><label><input id="antiRepeatInput" type="checkbox" ${state.antiRepeat?'checked':''} style="width:auto;margin-right:6px;vertical-align:-2px"> 自动检测并抑制重复内容</label><div class="form-note">当回复与历史高度相似时，自动换角度重新生成一次。</div></div><div class="form-group"><label>全局底层提示词 <small>（对全部智能体生效）</small></label><textarea id="globalPrompt" placeholder="例如：始终使用简洁、准确的中文回答…">${escapeHtml(state.globalPrompt)}</textarea></div><div class="modal-footer"><button class="btn ghost" id="cancel">取消</button><button class="btn primary" id="saveSettings">保存设置</button></div>`,()=>{$('#cancel').onclick=closeModal;$('#toggleKey').onclick=()=>{const input=$('#apiKeyInput');input.type=input.type==='password'?'text':'password';};$('#tempInput').oninput=()=>{$('#tempVal').textContent=$('#tempInput').value;};$('#topPInput').oninput=()=>{$('#topPVal').textContent=$('#topPInput').value;};$('#saveSettings').onclick=()=>{state.apiKey=$('#apiKeyInput').value.trim();state.apiBase=($('#apiBaseInput').value.trim()||'https://api.deepseek.com').replace(/\/+$/,'');state.model=$('#modelInput').value.trim()||'deepseek-v4-flash';state.thinking=$('#thinkingInput').value;state.temperature=parseFloat($('#tempInput').value);state.topP=parseFloat($('#topPInput').value);state.antiRepeat=$('#antiRepeatInput').checked;state.globalPrompt=$('#globalPrompt').value.trim();saveState();closeModal();toast(state.apiKey?'API 设置已保存':'已清除 API Key');};});
+      const draft = { builtin: state.apiBase.startsWith('/') && !state.apiKey };
+      const currentModel = state.model || DEFAULT_MODEL;
+      const modelOptions = (list, current)=>{
+        const ids = []; if(current) ids.push(current); (list||[]).forEach(id=>{ if(id && !ids.includes(id)) ids.push(id); });
+        if(!ids.length) ids.push(DEFAULT_MODEL);
+        return ids.map(id=>'<option value="'+escapeHtml(id)+'"'+(id===current?' selected':'')+'>'+escapeHtml(id)+'</option>').join('');
+      };
+      const refreshSelect = (keep)=>{ const sel=$('#modelInput'); if(!sel) return; const list=draft.builtin?(state.modelList.length?state.modelList:BUILTIN_MODELS):state.modelList; const cur=keep||sel.value; sel.innerHTML=modelOptions(list, list.includes(cur)?cur:(list[0]||cur)); };
+      openModal(`<h2>API 设置</h2><p class="hint">内置模型开箱即用；有特殊需求可切换到自己的 API。</p><div class="privacy-card"><span>🔒</span><div><b>API 地址与 Key 只保存在你自己的浏览器</b>它们仅存于本机 localStorage，不会上传到本站服务器，也不会出现在任何请求日志里。使用内置模型时，平台密钥保存在服务端环境变量中，前端全程接触不到。</div></div><div class="seg-tabs"><button type="button" class="seg-tab ${draft.builtin?'active':''}" data-tab="builtin">内置 API</button><button type="button" class="seg-tab ${draft.builtin?'':'active'}" data-tab="custom">自定义 API</button></div><div class="tab-panel" id="panelBuiltin"${draft.builtin?'':' hidden'}><div class="status-card">● ${state.builtinReady===false?'⚠ 服务端未配置 MAKERS_MODELS_KEY，内置模型暂不可用，请改用自定义 API':'未设置密钥 · 经本站边缘节点调用内置模型，开箱即用'}</div></div><div class="tab-panel" id="panelCustom"${draft.builtin?' hidden':''}><div class="form-group"><label>API 地址</label><input id="apiBaseInput" type="text" placeholder="https://api.openai.com/v1" value="${escapeHtml(draft.builtin?'':state.apiBase)}"><div class="form-note">任意 OpenAI 兼容地址（官方、中转、自建均可），会自动补全 /chat/completions。模型名需与该服务匹配，如 provider/model 形式。</div></div><div class="form-group"><label>API Key</label><div class="key-input"><input id="apiKeyInput" type="password" placeholder="sk-…" value="${escapeHtml(state.apiKey)}"><button type="button" id="toggleKey" title="显示或隐藏密钥">◉</button></div></div></div><div class="form-group"><label>模型</label><div class="model-picker"><select id="modelInput">${modelOptions(state.modelList, currentModel)}</select><button type="button" id="fetchModels">获取列表</button><button type="button" id="manualModel" title="手动填写模型名">✎</button></div><div class="form-note">内置模式直接载入可选模型；自定义模式点「获取列表」从你的 API 拉取，若该服务不支持列表接口可点 ✎ 手填。</div></div><details class="adv"><summary>高级演绎参数</summary><div class="form-group"><label>思考模式</label><select id="thinkingInput">${thinkOpts}</select><div class="form-note">关闭思考后回复最快、最不易重复；思考模式会让模型先推理再回答，但更容易出现重复与套话。</div></div><div class="form-group"><label>随机性 temperature <small id="tempVal">${temp}</small></label><input id="tempInput" type="range" min="0" max="2" step="0.1" value="${temp}"><div class="form-note">越高越有创意、越不易重复（仅关闭思考时生效）。角色演绎建议 1.2～1.5。</div></div><div class="form-group"><label>采样范围 top_p <small id="topPVal">${topP}</small></label><input id="topPInput" type="range" min="0" max="1" step="0.05" value="${topP}"><div class="form-note">配合 temperature 使用，建议 0.85～0.95。</div></div><div class="form-group"><label><input id="antiRepeatInput" type="checkbox" ${state.antiRepeat?'checked':''} style="width:auto;margin-right:6px;vertical-align:-2px"> 自动检测并抑制重复内容</label><div class="form-note">当回复与历史高度相似时，自动换角度重新生成一次。</div></div><div class="form-group"><label>全局底层提示词 <small>（对全部智能体生效）</small></label><textarea id="globalPrompt" placeholder="例如：始终使用简洁、准确的中文回答…">${escapeHtml(state.globalPrompt)}</textarea></div></details><div class="modal-footer"><button class="btn ghost" id="cancel">取消</button><button class="btn primary" id="saveSettings">保存设置</button></div>`,()=>{
+        const tabs=document.querySelectorAll('.seg-tab');
+        const setTab=(builtin)=>{ draft.builtin=builtin; tabs.forEach(b=>b.classList.toggle('active',(b.dataset.tab==='builtin')===builtin)); $('#panelBuiltin').hidden=!builtin; $('#panelCustom').hidden=builtin; refreshSelect(); };
+        tabs.forEach(b=>b.onclick=()=>setTab(b.dataset.tab==='builtin'));
+        $('#cancel').onclick=closeModal;
+        $('#toggleKey').onclick=()=>{const input=$('#apiKeyInput');input.type=input.type==='password'?'text':'password';};
+        $('#tempInput').oninput=()=>{$('#tempVal').textContent=$('#tempInput').value;};
+        $('#topPInput').oninput=()=>{$('#topPVal').textContent=$('#topPInput').value;};
+        $('#manualModel').onclick=()=>{ const v=prompt('输入模型名称',$('#modelInput').value); if(!v||!v.trim())return; const id=v.trim(); if(!state.modelList.includes(id)){ state.modelList.unshift(id); saveState(); } const sel=$('#modelInput'); if(![...sel.options].some(o=>o.value===id)) sel.insertAdjacentHTML('afterbegin','<option value="'+escapeHtml(id)+'">'+escapeHtml(id)+'</option>'); sel.value=id; };
+        $('#fetchModels').onclick=async()=>{
+          const btn=$('#fetchModels'); btn.disabled=true; btn.textContent='获取中…';
+          try{
+            if(draft.builtin){ state.modelList=[...BUILTIN_MODELS]; saveState(); refreshSelect(); toast('已载入 '+BUILTIN_MODELS.length+' 个内置模型，请选择'); return; }
+            const base = $('#apiBaseInput').value.trim();
+            const key = $('#apiKeyInput').value.trim();
+            if(!base){ toast('请先填写 API 地址'); return; }
+            const res=await fetch('/api/models',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({base:base||'/api',key})});
+            const data=await res.json().catch(()=>({}));
+            if(!res.ok) throw new Error(data.error?.message || ('HTTP '+res.status));
+            const ids=[...new Set((data.models||[]).map(m=>m&&m.id).filter(Boolean))].sort();
+            if(!ids.length) throw new Error('该 API 未返回可用模型');
+            state.modelList=ids; saveState(); refreshSelect();
+            toast('已获取 '+ids.length+' 个模型，请选择');
+          }catch(e){ toast('获取失败：'+classifyError(e)); }
+          finally{ btn.disabled=false; btn.textContent='获取列表'; }
+        };
+        $('#saveSettings').onclick=()=>{
+          let base, key;
+          if(draft.builtin){ base='/api'; key=''; }
+          else {
+            base=$('#apiBaseInput').value.trim().replace(/\/+$/,'');
+            key=$('#apiKeyInput').value.trim();
+            if(!base) return toast('请填写 API 地址，或切回内置 API');
+            if(!key) return toast('请填写 API Key，或切回内置 API');
+          }
+          state.apiBase=base; state.apiKey=key;
+          state.model=$('#modelInput').value.trim()||DEFAULT_MODEL;
+          state.thinking=$('#thinkingInput').value;
+          state.temperature=parseFloat($('#tempInput').value);
+          state.topP=parseFloat($('#topPInput').value);
+          state.antiRepeat=$('#antiRepeatInput').checked;
+          state.globalPrompt=$('#globalPrompt').value.trim();
+          saveState(); closeModal(); refreshGatewayStatus();
+          toast(draft.builtin?'已保存 · 使用内置模型':'已保存 · 使用自定义 API');
+        };
+      });
     }
 
     function openStatusEditor(){
@@ -442,7 +575,9 @@
       input += '【新增对话内容】\n'+segmentText;
       messages.push({role:'user', content:input});
       const payload = { model:state.model, messages, stream:false, max_tokens:2500, thinking:{type:'disabled'}, temperature:0.4 };
-      const res = await fetch(apiEndpoint(), { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+state.apiKey}, body:JSON.stringify(payload) });
+      const reqHeaders = {'Content-Type':'application/json'};
+      if(state.apiKey) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
+      const res = await fetch(apiEndpoint(), { method:'POST', headers:reqHeaders, body:JSON.stringify(payload) });
       if(!res.ok){ let d=''; try{d=(await res.json()).error?.message||''}catch{} throw new Error(res.status+' '+d); }
       const data = await res.json();
       const text = data.choices?.[0]?.message?.content;
@@ -479,7 +614,7 @@
       const list = chat();
       if(list.length < 4) return toast('对话还太少，暂不需要生成摘要');
       if(state.busy || state.summarizing) return;
-      if(!state.apiKey){ openSettings(); toast('请先设置 API 密钥'); return; }
+      if(!state.apiKey && !state.apiBase.startsWith('/')){ openSettings(); toast('请先设置 API 密钥，或将 API 地址设为 /api 使用内置模型'); return; }
       state.busy = true; $('#sendButton').disabled = true;
       toast('正在生成剧情摘要…');
       try {
@@ -491,19 +626,26 @@
     function openAgentEditor(agent){
       const edit = !!agent;
       agent = agent || {id:uid(), name:'', emoji:'✦', description:'', baseDirective:'', persona:'', initialScene:'', relationship:'', userProfile:''};
-      openModal(`<h2>${edit?'编辑角色':'创建角色'}</h2><p class="hint">只提供角色的人设与世界观环境即可，开场白与剧情走向交给 AI 自行想象。</p><div class="form-group"><label>角色名称</label><input id="agentName" maxlength="24" placeholder="例如：雾城引路人" value="${escapeHtml(agent.name)}"></div><div class="form-group"><label>图标 Emoji</label><input id="agentEmoji" maxlength="4" value="${escapeHtml(agent.emoji||'✦')}"></div><div class="form-group"><label>角色简介</label><input id="agentDesc" maxlength="60" placeholder="例如：沉浸式悬疑剧情演绎" value="${escapeHtml(agent.description||'')}"></div><div class="form-group"><label>角色底层输出设定 <small>（最高优先级）</small></label><textarea id="baseDirective" placeholder="强制规则：角色说话的语气风格、绝对不能做的事、必须遵守的输出规范…（优先级高于其余所有设定）">${escapeHtml(agent.baseDirective||'')}</textarea></div><div class="form-group"><label>角色人设</label><textarea id="agentPersona" placeholder="性格、语言习惯、目标、秘密…">${escapeHtml(agent.persona||'')}</textarea></div><div class="form-group"><label>我的设定（你扮演的角色）</label><textarea id="userProfile" placeholder="我是谁？身份、形象、性格、目标、秘密…（留空则让 AI 自行推断）">${escapeHtml(agent.userProfile||'')}</textarea></div><div class="form-group"><label>剧情初始环境</label><textarea id="initialScene" placeholder="剧情开始时，角色和用户所处的地点、时间、天气、气氛、正在发生的事…">${escapeHtml(agent.initialScene||'')}</textarea></div><div class="form-group"><label>你与角色的关系</label><input id="agentRelationship" maxlength="100" placeholder="例如：他是你失忆后唯一信任的向导" value="${escapeHtml(agent.relationship||'')}"></div><input id="roleFileInput" type="file" accept=".json,.txt,.md,text/plain,application/json" hidden><div class="form-group"><button type="button" class="btn ghost" id="importRoleButton">↥ 导入角色设定</button><div class="form-note">支持 JSON 角色卡，或 TXT / Markdown 世界书（最大 300 KB）。文件仅在本机解析。</div></div><div class="modal-footer">${edit&&state.agents.length>1?'<button class="btn danger" id="deleteAgent">删除</button>':''}<span style="flex:1"></span><button class="btn ghost" id="cancel">取消</button><button class="btn primary" id="saveAgent">保存角色</button></div>`,()=>{$('#cancel').onclick=closeModal;$('#importRoleButton').onclick=()=>$('#roleFileInput').click();$('#roleFileInput').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>300*1024){toast('文件不能超过 300 KB');e.target.value='';return;}try{const raw=(await file.text()).trim();if(!raw)throw new Error('文件为空');if(file.name.toLowerCase().endsWith('.json')){const source=JSON.parse(raw);const card={name:source.name||source.characterName,emoji:source.emoji||source.avatar,description:source.description||source.summary,baseDirective:source.baseDirective||source.directive,persona:source.persona||source.personality||source.character,initialScene:source.initialScene||source.scene,relationship:source.relationship,userProfile:source.userProfile||source.userPersona||source.myProfile};const fields={name:'agentName',emoji:'agentEmoji',description:'agentDesc',baseDirective:'baseDirective',persona:'agentPersona',initialScene:'initialScene',relationship:'agentRelationship',userProfile:'userProfile'};Object.entries(fields).forEach(([key,id])=>{if(card[key]!==undefined&&card[key]!==null)$('#'+id).value=typeof card[key]==='string'?card[key]:JSON.stringify(card[key]);});toast('角色卡已导入');}else{$('#initialScene').value=raw;toast('文本已导入到剧情初始环境');}}catch(err){toast('导入失败：请使用有效的 JSON、TXT 或 Markdown 文件');}finally{e.target.value='';}};$('#saveAgent').onclick=()=>{const name=$('#agentName').value.trim();if(!name)return toast('请填写角色名称');const data={...agent,name,emoji:$('#agentEmoji').value.trim()||'✦',description:$('#agentDesc').value.trim(),baseDirective:$('#baseDirective').value.trim(),persona:$('#agentPersona').value.trim(),initialScene:$('#initialScene').value.trim(),relationship:$('#agentRelationship').value.trim(),userProfile:$('#userProfile').value.trim()};if(edit)state.agents=state.agents.map(a=>a.id===data.id?data:a);else{state.agents.push(data);state.activeId=data.id;}saveState();closeModal();render();toast(edit?'角色已更新':'角色已创建');};const del=$('#deleteAgent');if(del)del.onclick=()=>confirmDialog('删除角色','此操作会同时删除该角色的剧情记忆，无法恢复。','删除',()=>{state.agents=state.agents.filter(a=>a.id!==agent.id);delete state.chats[agent.id];delete state.play[agent.id];state.activeId=state.agents[0].id;saveState();closeModal();render();toast('角色已删除');});});
+      openModal(`<h2>${edit?'编辑角色':'创建角色'}</h2><p class="hint">只提供角色的人设与世界观环境即可，开场白与剧情走向交给 AI 自行想象。</p><div class="form-group"><label>角色名称</label><input id="agentName" maxlength="24" placeholder="例如：雾城引路人" value="${escapeHtml(agent.name)}"></div><div class="form-group"><label>图标 Emoji</label><input id="agentEmoji" maxlength="4" value="${escapeHtml(agent.emoji||'✦')}"></div><div class="form-group"><label>角色简介</label><input id="agentDesc" maxlength="60" placeholder="例如：沉浸式悬疑剧情演绎" value="${escapeHtml(agent.description||'')}"></div><div class="form-group"><label>角色底层输出设定 <small>（最高优先级）</small></label><textarea id="baseDirective" placeholder="强制规则：角色说话的语气风格、绝对不能做的事、必须遵守的输出规范…（优先级高于其余所有设定）">${escapeHtml(agent.baseDirective||'')}</textarea></div><div class="form-group"><label>角色人设</label><textarea id="agentPersona" placeholder="性格、语言习惯、目标、秘密…">${escapeHtml(agent.persona||'')}</textarea></div><div class="form-group"><label>我的设定（你扮演的角色）</label><textarea id="userProfile" placeholder="我是谁？身份、形象、性格、目标、秘密…（留空则让 AI 自行推断）">${escapeHtml(agent.userProfile||'')}</textarea></div><div class="form-group"><label>剧情初始环境</label><textarea id="initialScene" placeholder="剧情开始时，角色和用户所处的地点、时间、天气、气氛、正在发生的事…">${escapeHtml(agent.initialScene||'')}</textarea></div><div class="form-group"><label>你与角色的关系</label><input id="agentRelationship" maxlength="100" placeholder="例如：他是你失忆后唯一信任的向导" value="${escapeHtml(agent.relationship||'')}"></div><input id="roleFileInput" type="file" accept=".json,.txt,.md,.png,text/plain,application/json,image/png" hidden><div class="form-group"><button type="button" class="btn ghost" id="importRoleButton">↥ 导入角色设定</button><div class="form-note">支持导入酒馆（SillyTavern）PNG / JSON 角色卡（V2/V3 自动映射字段），或 TXT / Markdown 世界书；文本 ≤300 KB、PNG ≤10 MB，文件仅在本机解析。</div></div><div class="modal-footer">${edit&&state.agents.length>1?'<button class="btn danger" id="deleteAgent">删除</button>':''}<span style="flex:1"></span><button class="btn ghost" id="cancel">取消</button><button class="btn primary" id="saveAgent">保存角色</button></div>`,()=>{$('#cancel').onclick=closeModal;$('#importRoleButton').onclick=()=>$('#roleFileInput').click();$('#roleFileInput').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;const isPng=/\.png$/i.test(file.name)||file.type==='image/png';const max=isPng?10*1024*1024:300*1024;if(file.size>max){toast(isPng?'PNG 角色卡不能超过 10 MB':'文件不能超过 300 KB');e.target.value='';return;}try{if(isPng){const card=parsePngCharaCard(await file.arrayBuffer());if(!card)throw new Error('no card data');fillFormFromCard(normalizeImportCard(card));toast('酒馆角色卡已导入');}else{const raw=(await file.text()).trim();if(!raw)throw new Error('文件为空');if(/\.json$/i.test(file.name)){fillFormFromCard(normalizeImportCard(JSON.parse(raw)));toast('角色卡已导入');}else{$('#initialScene').value=raw;toast('文本已导入到剧情初始环境');}}}catch(err){toast(isPng?'导入失败：PNG 中未找到有效的角色卡数据（需为酒馆 V2/V3 卡）':'导入失败：请使用有效的 JSON、TXT 或 Markdown 文件');}finally{e.target.value='';}};$('#saveAgent').onclick=()=>{const name=$('#agentName').value.trim();if(!name)return toast('请填写角色名称');const data={...agent,name,emoji:$('#agentEmoji').value.trim()||'✦',description:$('#agentDesc').value.trim(),baseDirective:$('#baseDirective').value.trim(),persona:$('#agentPersona').value.trim(),initialScene:$('#initialScene').value.trim(),relationship:$('#agentRelationship').value.trim(),userProfile:$('#userProfile').value.trim()};const wasBuiltin=isBuiltinId(data.id);if(edit&&state.agents.some(a=>a.id===data.id))state.agents=state.agents.map(a=>a.id===data.id?data:a);else{state.agents.push(data);state.activeId=data.id;}if(wasBuiltin)state.hiddenBuiltins=state.hiddenBuiltins.filter(id=>id!==data.id);saveState();closeModal();render();toast(edit?(wasBuiltin?'已保存为我的角色（内置卡不受影响）':'角色已更新'):'角色已创建');};const del=$('#deleteAgent');if(del)del.onclick=()=>confirmDialog('删除角色',isBuiltinId(agent.id)?'将从你的列表中移除该内置角色，并删除其本地剧情记忆。内置角色卡本身不受影响，可在「内置角色库」中重新添加。':'此操作会同时删除该角色的剧情记忆，无法恢复。','删除',()=>{state.agents=state.agents.filter(a=>a.id!==agent.id);if(isBuiltinId(agent.id)&&!state.hiddenBuiltins.includes(agent.id))state.hiddenBuiltins.push(agent.id);delete state.chats[agent.id];delete state.play[agent.id];const list=allAgents();state.activeId=list[0]?.id||'';saveState();closeModal();render();toast('角色已删除');});});
     }
     function confirmDialog(title,detail,ok,fn){openModal(`<h2>${title}</h2><p class="hint">${detail}</p><div class="modal-footer"><button class="btn ghost" id="cancel">取消</button><button class="btn danger" id="confirm">${ok}</button></div>`,()=>{$('#cancel').onclick=closeModal;$('#confirm').onclick=fn;});}
+    // 内置角色库：从服务端 KV 下发的卡中挑选加入（已加入 / 曾移除的都可再添加）
+    function openBuiltinLibrary(){
+      const builtin=state.builtinCards||[], mine=new Set(allAgents().map(a=>a.id));
+      const items=builtin.map(c=>`<div class="lib-item"><div class="lib-avatar">${escapeHtml(c.emoji||'✦')}</div><div class="lib-info"><div class="lib-name">${escapeHtml(c.name)}</div><div class="lib-desc">${escapeHtml(c.description||'')}</div></div><button class="lib-add" data-add="${escapeHtml(c.id)}" ${mine.has(c.id)?'disabled':''}>${mine.has(c.id)?'已加入':'加入'}</button></div>`).join('');
+      openModal(`<h2>内置角色库</h2><p class="hint">由服务端维护的精选角色卡。加入后可在侧栏使用，编辑只会保存到你自己的列表，不会影响内置卡。</p><div class="lib-list">${items||'<p class="form-note">暂无可用内置角色</p>'}</div><div class="modal-footer"><button class="btn primary" id="closeLib">完成</button></div>`,()=>{$('#closeLib').onclick=closeModal;document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const id=b.dataset.add;const card=builtin.find(c=>c.id===id);if(!card)return;state.agents.push({...card});state.hiddenBuiltins=state.hiddenBuiltins.filter(x=>x!==id);state.activeId=id;saveState();b.disabled=true;b.textContent='已加入';render();toast('已加入：'+card.name);});});
+    }
 
     function closeSide(){$('#sidebar').classList.remove('open');$('#overlay').classList.remove('show');}
 
     $('#addAgent').onclick=()=>openAgentEditor();
+    $('#openLibrary').onclick=openBuiltinLibrary;
     $('#editAgent').onclick=()=>openAgentEditor(activeAgent());
     $('#openSettings').onclick=openSettings;
     $('#menuButton').onclick=()=>{$('#sidebar').classList.add('open');$('#overlay').classList.add('show');};
     $('#overlay').onclick=closeSide;
     $('#modalLayer').onclick=e=>{if(e.target===$('#modalLayer'))closeModal();};
-    $('#restartChat').onclick=()=>{if(!chat().length)return toast('当前对话还没有消息');confirmDialog('重启对话','将清空「'+activeAgent().name+'」的全部对话记忆、状态与场景，此操作无法撤销。','清空对话',()=>{state.chats[state.activeId]=[];const p=play();p.roleState='';p.scene=activeAgent().initialScene||'';p.summary='';p._init=true;saveState();closeModal();render();toast('已重启对话');});};
+    $('#restartChat').onclick=()=>{if(!chat().length)return toast('当前对话还没有消息');confirmDialog('重启对话','将清空「'+activeAgent().name+'」的全部对话记忆、状态、场景与剧情摘要，此操作无法撤销。','清空对话',()=>{state.chats[state.activeId]=[];const p=play();p.roleState='';p.scene=activeAgent().initialScene||'';p.summaries=[];p.summarizedUpTo=0;p._init=true;saveState();closeModal();render();toast('已重启对话');});};
     $('#clearAllMemory').onclick=()=>{const count=Object.values(state.chats).reduce((total,list)=>total+(Array.isArray(list)?list.length:0),0);if(!count)return toast('目前没有可清空的记忆');confirmDialog('清空全部记忆','将删除所有智能体的 '+count+' 条本地对话记录与状态。智能体和 API 设置会保留，此操作无法撤销。','全部清空',()=>{state.chats={};state.play={};saveState();closeModal();render();toast('已清空全部记忆与对话');});};
     $('#sendButton').onclick=()=>sendMessage($('#prompt').value);
     $('#prompt').addEventListener('input',autoResize);
@@ -517,7 +659,7 @@
     document.querySelectorAll('#modeSwitch .mode-btn').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
     document.getElementById('wbBackBtn').onclick = ()=> setMode('rp');
 
-    loadState(); render();
+    loadState(); (async()=>{ await loadBuiltinCards(); render(); })(); refreshGatewayStatus();
 
 </script>
 </body>

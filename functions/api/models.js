@@ -1,0 +1,82 @@
+// EdgeOne Pages 边缘函数：模型列表代理
+// POST /api/models  body: { base?: string, key?: string }
+//   -> { models: [{ id, owned_by?, ... }] }
+//
+// 用途：前端「一键获取模型列表」。密钥可放在请求体（不落 URL、不进访问日志），
+// 未携带时使用平台环境变量 MAKERS_MODELS_KEY。
+// 注意：部分网关（含 Makers Models）不提供 /models 接口，会返回 404，
+// 此时前端应引导用户手动填写模型名，内置模型清单由前端 BUILTIN_MODELS 维护。
+// 同样不返回 CORS 头，仅允许本站页面调用，避免平台密钥被第三方站点盗刷。
+
+const DEFAULT_BASE = 'https://ai-gateway.edgeone.link/v1';
+
+function json(obj, status) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
+  });
+}
+
+function platformKey(env) {
+  const fromContext = env && env.MAKERS_MODELS_KEY;
+  if (fromContext) return String(fromContext).trim();
+  if (typeof MAKERS_MODELS_KEY !== 'undefined') return String(MAKERS_MODELS_KEY).trim();
+  return '';
+}
+
+export async function onRequest(context) {
+  const { request, env } = context;
+
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204 });
+  if (request.method !== 'POST') return json({ error: { message: 'Method Not Allowed' } }, 405);
+
+  let body = {};
+  try {
+    body = JSON.parse(await request.text());
+  } catch {
+    return json({ error: { message: '请求体不是有效的 JSON' } }, 400);
+  }
+
+  // base 支持相对路径 /api（回落到默认网关）与完整绝对地址
+  let base = typeof body.base === 'string' ? body.base.trim().replace(/\/+$/, '') : '';
+  if (!base || base === '/api') base = DEFAULT_BASE;
+
+  const auth = request.headers.get('authorization') || '';
+  const headerKey = /^bearer\s+/i.test(auth) ? auth.replace(/^bearer\s+/i, '').trim() : '';
+  const apiKey = (typeof body.key === 'string' && body.key.trim()) || headerKey || platformKey(env);
+
+  if (!apiKey) {
+    return json({ error: { message: '未配置 API Key，无法获取模型列表' } }, 401);
+  }
+
+  let upstream;
+  try {
+    upstream = await fetch(base + '/models', {
+      method: 'GET',
+      headers: { 'authorization': 'Bearer ' + apiKey },
+    });
+  } catch (e) {
+    return json({ error: { message: '无法连接上游服务：' + (e && e.message ? e.message : 'network error') } }, 502);
+  }
+
+  if (!upstream.ok) {
+    let detail = '';
+    try { detail = (await upstream.json()).error?.message || ''; } catch {}
+    if (upstream.status === 404) {
+      return json({ error: { message: '该服务不提供模型列表接口（/models），请点击 ✎ 手动填写模型名' } }, 404);
+    }
+    return json({ error: { message: upstream.status + ' ' + detail } }, upstream.status === 401 ? 401 : 502);
+  }
+
+  let data;
+  try { data = await upstream.json(); } catch { return json({ error: { message: '上游返回内容无法解析' } }, 502); }
+
+  const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+  const models = list
+    .map(m => (typeof m === 'string' ? { id: m } : { id: m?.id || m?.name, owned_by: m?.owned_by }))
+    .filter(m => m && typeof m.id === 'string' && m.id);
+
+  return json({ models });
+}
+
+export default onRequest;
