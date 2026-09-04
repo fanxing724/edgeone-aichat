@@ -108,13 +108,84 @@
   .wb-coming{font-size:12px;color:var(--muted);letter-spacing:.08em}
   .wb-back{margin-top:24px;border:1px solid var(--line);background:var(--solid);color:var(--text);border-radius:12px;padding:10px 20px;font-size:13px;font-weight:650;cursor:pointer;transition:.18s}.wb-back:hover{border-color:var(--blue);color:var(--blue)}
   @media(max-width:720px){.wb-view{padding:20px 16px}.wb-hero h2{font-size:22px}}
+
+  /* ===== 角色卡工坊 ===== */
+  .shop-view{display:none;flex:1;min-width:0;overflow:auto;padding:18px 24px 30px}
+  .app[data-mode="workshop"] .shop-view{display:block}
+  .app[data-mode="workshop"] .topbar .chat-avatar,
+  .app[data-mode="workshop"] .topbar #editAgent,
+  .app[data-mode="workshop"] .topbar #restartChat,
+  .app[data-mode="workshop"] .topbar #clearAllMemory,
+  .app[data-mode="workshop"] .side-head,
+  .app[data-mode="workshop"] .agent-list,
+  .app[data-mode="workshop"] .status-bar,
+  .app[data-mode="workshop"] .messages,
+  .app[data-mode="workshop"] .composer-wrap,
+  .app[data-mode="workshop"] .wb-view{display:none}
+  .app[data-mode="workshop"] .topbar{justify-content:flex-start}
+  .app[data-mode="workshop"] .title-block h1{font-size:17px}
+  .app[data-mode="workshop"] .title-block p{display:none}
+  .shop-top{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .shop-top h2{margin:0;font-size:20px;letter-spacing:-.02em}
+  .shop-top .spacer{flex:1}
+  .shop-top .btn{font-size:12.5px}
+  .shop-layout{display:grid;grid-template-columns:1fr 280px;gap:20px;max-width:1100px;margin:0 auto}
+  .shop-main{min-width:0;display:flex;flex-direction:column;gap:16px}
+  .shop-template-bar{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+  .shop-template-bar::-webkit-scrollbar{height:5px}
+  .shop-template-bar::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+  .shop-tpl{flex:none;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:13px;padding:9px 14px;font-size:13px;font-weight:600;white-space:nowrap;transition:.18s;display:flex;align-items:center;gap:6px}
+  .shop-tpl:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-1px)}
+  .shop-tpl.active{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 5px 14px rgba(69,103,246,.28)}
+  .shop-tpl .tpl-emoji{font-size:15px}
+  .shop-form{background:var(--solid);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+  .shop-form h3{margin:0 0 4px;font-size:16px}
+  .shop-form .hint{color:var(--muted);font-size:12.5px;margin:0 0 16px;line-height:1.5}
+  .shop-field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px}
+  .shop-field-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .shop-field label{font-size:12px;font-weight:650;color:var(--muted);display:flex;align-items:center;gap:5px}
+  .shop-field label .fld-emoji{font-size:14px}
+  .shop-field input,.shop-field textarea{width:100%;border:1px solid var(--line);border-radius:11px;background:color-mix(in srgb,var(--solid) 90%,var(--bg));color:var(--text);outline:none;padding:10px 11px;font-size:14px}
+  .shop-field input:focus,.shop-field textarea:focus{border-color:color-mix(in srgb,var(--blue) 50%,var(--line))}
+  .shop-field textarea{min-height:80px;resize:vertical;line-height:1.55}
+  .ai-fill-btn{flex:none;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:8px;padding:4px 9px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:3px;transition:.18s}
+  .ai-fill-btn:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
+  .ai-fill-btn:disabled{opacity:.5;cursor:wait}
+  .ai-fill-btn.fill-all{padding:9px 14px;font-size:13px;border-radius:12px;background:var(--blue);color:#fff;border-color:var(--blue)}
+  .ai-fill-btn.fill-all:hover:not(:disabled){background:#3659f1}
+  .shop-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+  .shop-actions .btn{flex:1;min-width:120px}
+  .shop-side{display:flex;flex-direction:column;gap:10px}
+  .shop-side-head{display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--muted);font-weight:650;padding:0 2px}
+  .shop-side-head .count{color:var(--blue);font-size:12px}
+  .shop-drafts{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow:auto;padding:2px}
+  .shop-draft{border:1px solid var(--line);border-radius:13px;background:var(--panel);padding:11px;display:flex;flex-direction:column;gap:8px}
+  .shop-draft-head{display:flex;align-items:center;gap:9px}
+  .shop-draft-avatar{width:32px;height:32px;flex:none;border-radius:11px;display:grid;place-items:center;color:#fff;font-size:16px;background:linear-gradient(145deg,#9a8cff,#5d72fb)}
+  .shop-draft-name{font-size:13.5px;font-weight:650;min-width:0;flex:1}
+  .shop-draft-name span{display:block;font-size:11px;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .shop-draft-btns{display:flex;gap:5px;flex-wrap:wrap}
+  .shop-draft-btns button{flex:1;border:1px solid var(--line);background:var(--solid);color:var(--muted);border-radius:8px;padding:5px 7px;font-size:11px;transition:.18s}
+  .shop-draft-btns button:hover{color:var(--blue);border-color:var(--blue)}
+  .shop-draft-btns button.danger:hover{color:var(--danger);border-color:var(--danger)}
+  .shop-draft-btns button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+  .shop-empty{padding:24px 12px;text-align:center;color:var(--muted);font-size:13px;border:1px dashed var(--line);border-radius:13px}
+  @media(max-width:720px){
+    .shop-view{padding:14px 13px 22px}
+    .shop-layout{grid-template-columns:1fr;gap:14px}
+    .shop-top h2{font-size:18px}
+    .shop-form{padding:16px;border-radius:16px}
+    .shop-field input,.shop-field textarea{font-size:16px;padding:11px}
+    .shop-actions .btn{flex:1 1 100%;min-width:0}
+    .shop-side{order:2}
+  }
   </style>
 </head>
 <body>
   <div class="app">
     <aside class="sidebar" id="sidebar">
       <div class="brand"><div class="brand-mark">✦</div> AI 剧场</div>
-      <div class="mode-switch" id="modeSwitch"><button class="mode-btn active" data-mode="rp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5c3.4 0 6 2.3 6 5.4 0 1.7-.8 3.1-2 4-.4 1.8-1.6 3-3.9 3s-3.5-1.2-3.9-3c-1.2-.9-2-2.3-2-4 0-3.1 2.6-5.4 6-5.4z"/><path d="M9.4 9.4c.3 0 .5.2.5.5"/><path d="M14.1 9.4c.3 0 .5.2.5.5"/><path d="M9.8 13.2c.6-.5 1.4-.8 2.2-.8s1.6.3 2.2.8"/></svg><span>剧情演绎</span></button><button class="mode-btn" data-mode="worldbook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6C10.5 5 9 4.5 7 4.5S3.5 5 2 6v11.5c1.5-1 3-1.5 5-1.5s3.5.5 5 1.5c1.5-1 3-1.5 5-1.5s3.5.5 5 1.5V6c-1.5-1-3-1.5-5-1.5S13.5 5 12 6z"/><path d="M12 6v11.5"/><path d="M7.5 8.5c1.2-.3 2.3-.3 3.5 0"/><path d="M16.5 8.5c-1.2-.3-2.3-.3-3.5 0"/><path d="M7.5 11c1.2-.3 2.3-.3 3.5 0"/><path d="M16.5 11c-1.2-.3-2.3-.3-3.5 0"/></svg><span>世界书</span></button></div>
+      <div class="mode-switch" id="modeSwitch"><button class="mode-btn active" data-mode="rp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5c3.4 0 6 2.3 6 5.4 0 1.7-.8 3.1-2 4-.4 1.8-1.6 3-3.9 3s-3.5-1.2-3.9-3c-1.2-.9-2-2.3-2-4 0-3.1 2.6-5.4 6-5.4z"/><path d="M9.4 9.4c.3 0 .5.2.5.5"/><path d="M14.1 9.4c.3 0 .5.2.5.5"/><path d="M9.8 13.2c.6-.5 1.4-.8 2.2-.8s1.6.3 2.2.8"/></svg><span>剧情演绎</span></button><button class="mode-btn" data-mode="worldbook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6C10.5 5 9 4.5 7 4.5S3.5 5 2 6v11.5c1.5-1 3-1.5 5-1.5s3.5.5 5 1.5c1.5-1 3-1.5 5-1.5s3.5.5 5 1.5V6c-1.5-1-3-1.5-5-1.5S13.5 5 12 6z"/><path d="M12 6v11.5"/><path d="M7.5 8.5c1.2-.3 2.3-.3 3.5 0"/><path d="M16.5 8.5c-1.2-.3-2.3-.3-3.5 0"/><path d="M7.5 11c1.2-.3 2.3-.3 3.5 0"/><path d="M16.5 11c-1.2-.3-2.3-.3-3.5 0"/></svg><span>世界书</span></button><button class="mode-btn" data-mode="workshop" title="角色卡工坊"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-10 10H4v-6L14 4z"/><path d="M11 7l6 6"/></svg><span>工坊</span></button></div>
       <div class="side-head"><span>我的角色</span><span class="side-actions"><button class="icon-btn" id="openLibrary" title="内置角色库">☰</button><button class="icon-btn" id="addAgent" title="创建角色">＋</button></span></div>
       <div class="agent-list" id="agentList"></div>
       <div class="side-foot"><button class="settings-row" id="openSettings"><span>⚙︎</span> API 设置 <i class="key-dot" id="keyDot"></i></button></div>
@@ -126,6 +197,40 @@
       <section class="messages" id="messages"></section>
       <div class="composer-wrap"><div class="composer"><div class="attachment-preview" id="attachmentPreview" hidden><span id="attachmentName"></span><button type="button" id="removeAttachment" title="移除附件">×</button></div><textarea id="prompt" placeholder="写下行动、对话或叙述…（支持 *动作* “台词” 【状态】标记）" aria-label="输入消息"></textarea><div class="composer-bottom"><button class="attach-file" id="attachFile" type="button" title="添加文本附件">＋</button><label class="memory-switch"><input id="memoryToggle" type="checkbox" checked> 保留剧情记忆</label><span class="shortcut">⌘ / Ctrl + Enter 发送</span><button class="send" id="sendButton" title="推进剧情">↑</button></div><input id="chatFileInput" type="file" accept=".txt,.md,.json,.csv,.html,.js,.ts,.py,.java,.c,.cpp,.css,text/plain,text/markdown,application/json,text/csv" hidden></div></div>
       <div class="wb-view" id="wbView" hidden><div class="wb-hero"><div class="wb-orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6C10.5 5 9 4.5 7 4.5S3.5 5 2 6v11.5c1.5-1 3-1.5 5-1.5s3.5.5 5 1.5c1.5-1 3-1.5 5-1.5s3.5.5 5 1.5V6c-1.5-1-3-1.5-5-1.5S13.5 5 12 6z"/><path d="M12 6v11.5"/><path d="M7.5 8.5c1.2-.3 2.3-.3 3.5 0"/><path d="M16.5 8.5c-1.2-.3-2.3-.3-3.5 0"/></svg></div><h2>世界书模式</h2><p class="wb-desc">一个更宏大的创作舞台：多角色同场、事件随时间推进、正派与反派博弈、完整的剧情脉络。</p><div class="wb-features"><div class="wb-feat">多角色</div><div class="wb-feat">事件进展</div><div class="wb-feat">正派 / 反派</div><div class="wb-feat">剧情树</div><div class="wb-feat">世界设定</div></div><p class="wb-coming">即将上线，敬请期待</p><button class="wb-back" id="wbBackBtn">← 返回剧情演绎</button></div></div>
+      <div class="shop-view" id="shopView" hidden>
+        <div class="shop-top">
+          <h2>角色卡工坊</h2><span class="spacer"></span>
+          <button class="btn ghost" id="shopClearDrafts" title="清空草稿区">清空草稿</button>
+          <button class="btn primary" id="shopExportBatch" title="导出全部草稿为 JSON 数组">批量导出</button>
+        </div>
+        <div class="shop-layout">
+          <div class="shop-main">
+            <div class="shop-template-bar" id="shopTemplates"></div>
+            <div class="shop-form">
+              <h3 id="shopFormTitle">新建角色卡</h3>
+              <p class="hint">从模板填骨架，再用 AI 补全空字段，最后加入侧栏或导出 JSON。所有字段同剧情演绎的角色卡。</p>
+              <div class="shop-field"><div class="shop-field-head"><label><span class="fld-emoji">📛</span>角色名称</label><button type="button" class="ai-fill-btn" data-fill="name">✨ 补全</button></div><input id="shopName" maxlength="24" placeholder="例如：雾城引路人"></div>
+              <div class="shop-field"><div class="shop-field-head"><label><span class="fld-emoji">✦</span>图标 Emoji</label><button type="button" class="ai-fill-btn" data-fill="emoji">✨ 补全</button></div><input id="shopEmoji" maxlength="4" placeholder="✦"></div>
+              <div class="shop-field"><div class="shop-field-head"><label><span class="fld-emoji">📝</span>角色简介</label><button type="button" class="ai-fill-btn" data-fill="description">✨ 补全</button></div><input id="shopDesc" maxlength="60" placeholder="一句话定位，例如：沉浸式悬疑剧情演绎"></div>
+              <div class="shop-field"><div class="shop-field-head"><label><span class="fld-emoji">⚙</span>底层输出设定 <small>（最高优先级）</small></label><button type="button" class="ai-fill-btn" data-fill="baseDirective">✨ 补全</button></div><textarea id="shopBaseDirective" placeholder="语气风格、绝对禁止的事、必须遵守的输出规范…"></textarea></div>
+              <div class="shop-field"><div class="shop-field-head"><label><span class="fld-emoji">👤</span>角色人设</label><button type="button" class="ai-fill-btn" data-fill="persona">✨ 补全</button></div><textarea id="shopPersona" placeholder="性格、语言习惯、目标、秘密…"></textarea></div>
+              <div class="shop-field"><div class="shop-field-head"><label><span class="fld-emoji">🧑</span>我的设定</label><button type="button" class="ai-fill-btn" data-fill="userProfile">✨ 补全</button></div><textarea id="shopUserProfile" placeholder="用户身份、形象、与角色关系…留空让 AI 自行推断"></textarea></div>
+              <div class="shop-field"><div class="shop-field-head"><label><span class="fld-emoji">🎬</span>剧情初始环境</label><button type="button" class="ai-fill-btn" data-fill="initialScene">✨ 补全</button></div><textarea id="shopInitialScene" placeholder="地点、时间、天气、气氛、正在发生的事…"></textarea></div>
+              <div class="shop-field"><div class="shop-field-head"><label><span class="fld-emoji">💞</span>与角色的关系</label><button type="button" class="ai-fill-btn" data-fill="relationship">✨ 补全</button></div><input id="shopRelationship" maxlength="100" placeholder="例如：他是你失忆后唯一信任的向导"></div>
+              <div class="shop-actions">
+                <button class="ai-fill-btn fill-all" id="shopAiFillAll">✨ AI 补全全部空字段</button>
+                <button class="btn ghost" id="shopSaveDraft">存入草稿区</button>
+                <button class="btn ghost" id="shopExportJson">导出 JSON</button>
+                <button class="btn primary" id="shopAddAgent">加入我的角色</button>
+              </div>
+            </div>
+          </div>
+          <div class="shop-side">
+            <div class="shop-side-head"><span>草稿区</span><span class="count" id="shopDraftCount">0</span></div>
+            <div class="shop-drafts" id="shopDrafts"></div>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
   <div class="modal-layer" id="modalLayer"><div class="modal" id="modal"></div></div><div class="toast" id="toast"></div>
@@ -136,10 +241,21 @@
 
     const defaults = [{id:'default',name:'雾城引路人',emoji:'✦',description:'沉浸式角色演绎 · 雾城篇',baseDirective:'',persona:'你是雾城的引路人，敏锐、克制、略带神秘感。你善于通过细节、对话和行动推动剧情。',userProfile:'你是失忆的旅人，正在雾城中寻找自己丢失的过去。',initialScene:'深夜的雾城街头，浓雾让人看不清三步之外。你与引路人并肩站在一座老旧的钟楼下。',relationship:'你是我的向导，也是唯一知道我失忆前秘密的人。'}];
 
-    const state = {agents:[], activeId:'default', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'/api', model:'@makers/deepseek-v4-flash', builtinReady:null, builtinCards:[], hiddenBuiltins:[], modelList:[], thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, attachment:null, mode:'rp'};
+    const state = {agents:[], activeId:'default', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'/api', model:'@makers/deepseek-v4-flash', builtinReady:null, builtinCards:[], hiddenBuiltins:[], modelList:[], thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, attachment:null, mode:'rp', workshopDrafts:[], shopActiveTpl:null, shopEditingId:null};
     // 网关内置免费模型（平台侧不提供 /models 接口，故在此维护；绑定自有厂商密钥后可用 provider/model 形式调用任意模型）
     const BUILTIN_MODELS = ['@makers/deepseek-v4-flash','@makers/deepseek-v4-pro','@makers/hy3','@makers/hy3-preview','@makers/minimax-m2.7','@makers/minimax-m3','@makers/kimi-k2.6'];
     const DEFAULT_MODEL = '@makers/deepseek-v4-flash';
+
+    // 角色卡工坊模板：骨架字段，灌入表单作起点；占位符供 AI 补全识别上下文
+    const WORKSHOP_TEMPLATES = [
+      { id:'blank', emoji:'✦', name:'空白卡', description:'全字段空白，自由创作', fields:{} },
+      { id:'lover', emoji:'🍵', name:'恋人纵容型', description:'克制温润、细节浪漫、偶尔强势', fields:{ baseDirective:'语气克制温润，像陈年的茶，不疾不徐。极少直接说"爱"，情意藏在动作、细节与纵容里。绝不油腻、绝不说教、绝不替用户做决定。', persona:'【核心性格】\n· 沉稳的纵容者：她做什么你都先看着她笑，哪怕她犯傻、做错事、耍小脾气，你也只是轻轻叹一口气，然后说"嗯，知道了，我来处理"。\n· 细节里的浪漫：你记得她的偏好与习惯，每次出现都提前备好她喜欢的东西，温度刚好。\n· 偶尔的强势：平时什么都依她，但若她伤害自己，你会皱起眉头认真看着她的眼睛说"别让我担心"。\n【说话方式】短句、低声、留白多，多用具体动作代替情绪宣告。' } },
+      { id:'heal', emoji:'🐱', name:'治愈陪伴型', description:'安静依赖、笨拙关心', fields:{ baseDirective:'语气轻柔、句子短，带一点笨拙的停顿与省略号。关心主要通过行动和身体语言表达，不擅长直白倾诉。禁止过度热情或话痨。', persona:'【核心性格】\n· 安静的陪伴者：话不多，喜欢默默做事。她在你就踏实，不说话但让人知道你在。\n· 全心依赖：对旁人礼貌但疏离，唯独对她毫无防备，会主动靠近、蹭、留位置。\n· 笨拙的关心：不太会表达，关心都变成行动——她打喷嚏立刻裹毛毯，她皱眉就推甜的过去。被夸会别过脸小声否认。' } },
+      { id:'mystery', emoji:'✦', name:'悬疑引路型', description:'神秘克制、推动剧情', fields:{ baseDirective:'敏锐、克制、略带神秘感。善于通过细节、对话和行动推动剧情，不主动交代所有信息。', persona:'你是雾城的引路人，敏锐、克制、略带神秘感。你善于通过细节、对话和行动推动剧情，从不一次性给出全部答案，总在关键处留下新的疑问或线索。', userProfile:'你是失忆的旅人，正在雾城中寻找自己丢失的过去。', relationship:'你是我的向导，也是唯一知道我失忆前秘密的人。' } },
+      { id:'mentor', emoji:'📕', name:'严师益友型', description:'高标准、push 用户成长', fields:{ baseDirective:'语气直接、不绕弯，批评一针见血但出发点是为对方好。偶尔流露温情，但绝不溺爱纵容。禁止无脑夸赞或和稀泥。', persona:'【核心性格】\n· 高标准：你看得出对方的潜力，所以从不满足于"还行"。出错会直接指出，但永远给出可执行的改进方向。\n· 外冷内热：嘴上严厉，私下会默默把对方需要的资源、机会备好推过去。\n· 不替对方走路：只指方向、把路障搬开，剩下的路让对方自己走。' } },
+      { id:'villain', emoji:'🌑', name:'反派宿敌型', description:'强势对立、张力拉满', fields:{ baseDirective:'语气强势、带有压迫感，逻辑缜密、步步紧逼。从不无脑威胁，而是用事实和心理战瓦解对方。偶尔流露欣赏，但立场不变。', persona:'【核心性格】\n· 绝对自信：你相信自己的判断与秩序，对方的抵抗在你看来幼稚但有趣。\n· 精准打击：你善于抓住对方的软肋与矛盾，用最少的字最重地戳。\n· 偶尔的体面：胜利要赢得漂亮，不屑于下作手段；对值得的对手会留一线。' } },
+      { id:'intruder', emoji:'⚡', name:'闯入变数型', description:'突然介入、打破现状', fields:{ baseDirective:'节奏快、信息密度高，每句话都带来新的变量或转折。语气带有不确定感和冲击力，禁止铺垫和寒暄。', persona:'【核心性格】\n· 突然出现：你的到来本身就改变局势，让所有人措手不及。\n· 信息冲击：你知道一些别人不知道的事，但只在该说的时候说一句，剩下的留给对方消化。\n· 立场模糊：你可能是敌是友，自己也未必清楚，一切看对方如何接招。' } }
+    ];
     const storeKey = 'ai-theater-v1';
     const ICON_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
     const ICON_REGEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>';
@@ -166,7 +282,8 @@
       state.antiRepeat = saved.antiRepeat !== false;
       state.repeatThreshold = typeof saved.repeatThreshold==='number' ? saved.repeatThreshold : 0.55;
       state.memory = saved.memory !== false;
-      state.mode = saved.mode==='worldbook' ? 'worldbook' : 'rp';
+      state.mode = saved.mode==='worldbook' ? 'worldbook' : saved.mode==='workshop' ? 'workshop' : 'rp';
+      state.workshopDrafts = Array.isArray(saved.workshopDrafts) ? saved.workshopDrafts.filter(d=>d&&d.name) : [];
       state.apiBase = typeof saved.apiBase==='string' && saved.apiBase.trim() ? saved.apiBase.trim().replace(/\/+$/,'') : '/api';
       state.apiKey = '';
       try { const encrypted = localStorage.getItem(storeKey+'-key'); if(encrypted) state.apiKey = atob(encrypted); } catch {}
@@ -175,7 +292,7 @@
     }
 
     function saveState(){
-      const clean = {agents:state.agents, hiddenBuiltins:state.hiddenBuiltins, modelList:state.modelList, activeId:state.activeId, chats:state.chats, play:state.play, globalPrompt:state.globalPrompt, apiBase:state.apiBase, model:state.model, thinking:state.thinking, temperature:state.temperature, topP:state.topP, antiRepeat:state.antiRepeat, repeatThreshold:state.repeatThreshold, memory:state.memory, mode:state.mode, savedAt:now(), version:2};
+      const clean = {agents:state.agents, hiddenBuiltins:state.hiddenBuiltins, modelList:state.modelList, activeId:state.activeId, chats:state.chats, play:state.play, globalPrompt:state.globalPrompt, apiBase:state.apiBase, model:state.model, thinking:state.thinking, temperature:state.temperature, topP:state.topP, antiRepeat:state.antiRepeat, repeatThreshold:state.repeatThreshold, memory:state.memory, mode:state.mode, workshopDrafts:state.workshopDrafts, savedAt:now(), version:2};
       try { localStorage.setItem(storeKey, JSON.stringify(clean)); } catch(e){ toast('保存失败：本地存储空间不足'); }
       if(state.apiKey) localStorage.setItem(storeKey+'-key', btoa(state.apiKey));
       else localStorage.removeItem(storeKey+'-key');
@@ -320,7 +437,7 @@
       $('#genSummaryBtn').onclick = generateSummary;
     }
 
-    function render(){ document.querySelector('.app').dataset.mode = state.mode; document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===state.mode)); const agent=activeAgent(); const p=play(); if(state.mode==='worldbook'){ $('#chatTitle').textContent='世界书'; $('#chatSubtitle').textContent='多角色 · 事件进展 · 正反派 · 剧情'; } else { if(!p._init){ p._init=true; if(!p.scene) p.scene=agent.initialScene||''; } $('#chatAvatar').textContent=agent.emoji||'✦';$('#chatTitle').textContent=agent.name;$('#chatSubtitle').textContent=agent.relationship||agent.description||'未设置角色关系'; } $('#memoryToggle').checked=state.memory; renderAgents();renderMessages();renderStatus();updateKeyStatus(); }
+    function render(){ document.querySelector('.app').dataset.mode = state.mode; document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===state.mode)); const agent=activeAgent(); const p=play(); if(state.mode==='worldbook'){ $('#chatTitle').textContent='世界书'; $('#chatSubtitle').textContent='多角色 · 事件进展 · 正反派 · 剧情'; } else if(state.mode==='workshop'){ $('#chatTitle').textContent='角色卡工坊'; $('#chatSubtitle').textContent='模板填空 · AI 补全 · 一键导入'; renderShop(); } else { if(!p._init){ p._init=true; if(!p.scene) p.scene=agent.initialScene||''; } $('#chatAvatar').textContent=agent.emoji||'✦';$('#chatTitle').textContent=agent.name;$('#chatSubtitle').textContent=agent.relationship||agent.description||'未设置角色关系'; } $('#memoryToggle').checked=state.memory; renderAgents();renderMessages();renderStatus();updateKeyStatus(); }
 
     function updateKeyStatus(){ const proxy=state.apiBase.startsWith('/'); const ready=!!state.apiKey||(proxy&&state.builtinReady!==false); $('#keyDot').classList.toggle('ready',ready); $('#keyDot').title=state.apiKey?'使用自定义 API Key':(proxy?(state.builtinReady===false?'服务端未配置 MAKERS_MODELS_KEY 环境变量':'使用 EdgeOne Makers 内置模型（无需密钥）'):'未设置 API 密钥'); }
     async function refreshGatewayStatus(){ if(!state.apiBase.startsWith('/')) return; try{ const res=await fetch('/api/status'); if(!res.ok) return; const data=await res.json(); state.builtinReady=!!data.builtin; updateKeyStatus(); }catch{} }
@@ -623,6 +740,157 @@
       } catch(e){ toast(classifyError(e)); }
       finally { state.busy = false; $('#sendButton').disabled = false; }
     }
+    // ===== 角色卡工坊 =====
+    function shopFieldId(field){ return {name:'shopName',emoji:'shopEmoji',description:'shopDesc',baseDirective:'shopBaseDirective',persona:'shopPersona',userProfile:'shopUserProfile',initialScene:'shopInitialScene',relationship:'shopRelationship'}[field]; }
+    function shopReadForm(){
+      return {
+        id: state.shopEditingId || uid(),
+        name: $('#shopName').value.trim(),
+        emoji: $('#shopEmoji').value.trim() || '✦',
+        description: $('#shopDesc').value.trim(),
+        baseDirective: $('#shopBaseDirective').value.trim(),
+        persona: $('#shopPersona').value.trim(),
+        userProfile: $('#shopUserProfile').value.trim(),
+        initialScene: $('#shopInitialScene').value.trim(),
+        relationship: $('#shopRelationship').value.trim()
+      };
+    }
+    function shopFillForm(card){
+      const map = {name:'shopName',emoji:'shopEmoji',description:'shopDesc',baseDirective:'shopBaseDirective',persona:'shopPersona',userProfile:'shopUserProfile',initialScene:'shopInitialScene',relationship:'shopRelationship'};
+      Object.entries(map).forEach(([k,id])=>{ const el=$('#'+id); if(el) el.value = card[k]||''; });
+      $('#shopFormTitle').textContent = card.name ? ('编辑：'+card.name) : '新建角色卡';
+    }
+    function shopApplyTemplate(tplId){
+      const tpl = WORKSHOP_TEMPLATES.find(t=>t.id===tplId) || WORKSHOP_TEMPLATES[0];
+      state.shopActiveTpl = tpl.id;
+      state.shopEditingId = null;
+      shopFillForm({ id:uid(), name:'', emoji:tpl.emoji, description:tpl.description, ...tpl.fields });
+      document.querySelectorAll('#shopTemplates .shop-tpl').forEach(b=>b.classList.toggle('active', b.dataset.tpl===tpl.id));
+      $('#shopFormTitle').textContent = '模板：'+tpl.name;
+    }
+    function renderShopTemplates(){
+      $('#shopTemplates').innerHTML = WORKSHOP_TEMPLATES.map(t=>`<button type="button" class="shop-tpl ${t.id===state.shopActiveTpl?'active':''}" data-tpl="${t.id}"><span class="tpl-emoji">${escapeHtml(t.emoji)}</span>${escapeHtml(t.name)}</button>`).join('');
+      document.querySelectorAll('#shopTemplates .shop-tpl').forEach(b=>b.onclick=()=>shopApplyTemplate(b.dataset.tpl));
+    }
+    function renderShopDrafts(){
+      const list = state.workshopDrafts || [];
+      $('#shopDraftCount').textContent = String(list.length);
+      const host = $('#shopDrafts');
+      if(!list.length){ host.innerHTML = '<div class="shop-empty">暂无草稿<br>填好表单后点「存入草稿区」</div>'; return; }
+      host.innerHTML = list.map((d,i)=>`<div class="shop-draft" data-idx="${i}"><div class="shop-draft-head"><div class="shop-draft-avatar">${escapeHtml(d.emoji||'✦')}</div><div class="shop-draft-name">${escapeHtml(d.name||'未命名')}<span>${escapeHtml(d.description||'无简介')}</span></div></div><div class="shop-draft-btns"><button data-act="load">编辑</button><button data-act="dup">复制</button><button data-act="add" class="primary">加入</button><button data-act="del" class="danger">删除</button></div></div>`).join('');
+      host.querySelectorAll('.shop-draft').forEach(el=>{
+        const idx = +el.dataset.idx;
+        el.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+          const act = b.dataset.act, d = state.workshopDrafts[idx];
+          if(!d) return;
+          if(act==='load'){ state.shopEditingId = d.id; shopFillForm(d); $('#shopFormTitle').textContent='编辑：'+(d.name||'未命名'); state.shopActiveTpl=''; document.querySelectorAll('#shopTemplates .shop-tpl').forEach(x=>x.classList.remove('active')); shopViewScrollTop(); }
+          else if(act==='dup'){ const c={...d,id:uid(),name:(d.name||'未命名')+' 副本',createdAt:now()}; state.workshopDrafts.push(c); saveState(); renderShopDrafts(); toast('已复制草稿'); }
+          else if(act==='add'){ shopAddToAgents(d, idx); }
+          else if(act==='del'){ state.workshopDrafts.splice(idx,1); saveState(); renderShopDrafts(); toast('已删除草稿'); }
+        });
+      });
+    }
+    function shopViewScrollTop(){ const v=$('#shopView'); if(v) v.scrollTop=0; }
+    function renderShop(){ if(state.shopActiveTpl===null){ state.shopActiveTpl='blank'; } renderShopTemplates(); renderShopDrafts(); }
+
+    function shopSaveDraft(){
+      const card = shopReadForm();
+      if(!card.name){ toast('请先填写角色名称'); $('#shopName').focus(); return; }
+      card.createdAt = now();
+      if(state.shopEditingId){
+        const i = state.workshopDrafts.findIndex(d=>d.id===state.shopEditingId);
+        if(i>-1){ state.workshopDrafts[i] = card; toast('草稿已更新'); }
+        else { state.workshopDrafts.push(card); toast('已存入草稿区'); }
+      } else {
+        state.workshopDrafts.push(card);
+        toast('已存入草稿区');
+      }
+      state.shopEditingId = card.id;
+      saveState(); renderShopDrafts();
+    }
+    function shopAddToAgents(card, draftIdx){
+      card = card || shopReadForm();
+      if(!card.name){ toast('请先填写角色名称'); $('#shopName').focus(); return; }
+      const exist = state.agents.find(a=>a.id===card.id);
+      if(exist){ Object.assign(exist, card); toast('已更新该角色'); }
+      else { state.agents.push(card); toast('已加入：'+card.name); }
+      state.activeId = card.id;
+      if(typeof draftIdx==='number' && draftIdx>-1){
+        state.workshopDrafts.splice(draftIdx,1);
+        state.shopEditingId = null;
+      }
+      saveState(); render();
+      setMode('rp');
+    }
+    function shopExportJson(){
+      const card = shopReadForm();
+      if(!card.name){ toast('请先填写角色名称'); return; }
+      downloadJson([card], (card.name||'角色卡')+'.json');
+      toast('已导出 JSON');
+    }
+    function shopExportBatch(){
+      const drafts = state.workshopDrafts || [];
+      if(!drafts.length){ toast('草稿区为空，请先存草稿'); return; }
+      const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+      downloadJson(drafts, '角色卡批量_'+stamp+'.json');
+      toast('已导出 '+drafts.length+' 张草稿');
+    }
+    function downloadJson(data, filename){
+      const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    }
+    async function aiFillCard(targetField){
+      if(state.busy) return;
+      if(!state.apiKey && !state.apiBase.startsWith('/')){ toast('请先在 API 设置中配置密钥，或使用内置模型'); openSettings(); return; }
+      const card = shopReadForm();
+      if(!card.name && targetField !== 'name'){ toast('请先填写角色名称，AI 才能补全其余字段'); $('#shopName').focus(); return; }
+      const fields = targetField ? [targetField] : ['name','emoji','description','baseDirective','persona','userProfile','initialScene','relationship'];
+      const emptyFields = fields.filter(f=>!card[f]);
+      if(!emptyFields.length){ toast('没有空字段可补全'); return; }
+      state.busy = true; setShopBusy(true);
+      const btns = document.querySelectorAll('.ai-fill-btn');
+      btns.forEach(b=>b.disabled=true);
+      try {
+        const filled = await callAiFillCard(card, emptyFields);
+        emptyFields.forEach(f=>{
+          if(filled[f] && typeof filled[f]==='string'){
+            const id = shopFieldId(f);
+            if(id) $('#'+id).value = filled[f].trim();
+          }
+        });
+        toast('已补全 '+emptyFields.length+' 个字段');
+      } catch(e){ toast('AI 补全失败：'+classifyError(e)); }
+      finally { state.busy=false; setShopBusy(false); btns.forEach(b=>b.disabled=false); }
+    }
+    function setShopBusy(busy){
+      const labels = {name:'补全',emoji:'补全',description:'补全',baseDirective:'补全',persona:'补全',userProfile:'补全',initialScene:'补全',relationship:'补全'};
+      document.querySelectorAll('.ai-fill-btn[data-fill]').forEach(b=>{
+        const f=b.dataset.fill;
+        b.textContent = busy ? '…生成中' : '✨ '+(labels[f]||'补全');
+      });
+      const all = $('#shopAiFillAll'); if(all) all.textContent = busy ? '… AI 生成中' : '✨ AI 补全全部空字段';
+    }
+    async function callAiFillCard(card, fields){
+      const sys = '你是角色卡设计师。根据用户已填的字段，为指定的空缺字段补全内容，输出严格的 JSON。\n\n【硬性要求】\n1. 只输出一个 JSON 对象，键为字段名，值为字符串；不要任何解释、注释、markdown 代码块。\n2. 字段含义：name=角色名(≤12字)、emoji=单个 emoji、description=一句话简介(≤30字)、baseDirective=底层输出设定(语气风格/绝对禁止的事/必须遵守的规范,≤200字)、persona=角色人设(核心性格/说话方式/目标/秘密,分点写,≤350字)、userProfile=用户身份设定(≤150字)、initialScene=剧情初始环境(地点/时间/天气/气氛/正在发生的事,≤180字)、relationship=用户与角色的关系(≤50字)。\n3. 已填字段保持不动，只补全空缺字段；语气与已填内容保持一致。\n4. 内容要具体、有细节、能直接用于角色扮演，禁止空泛套话。';
+      const input = '【已填字段】\n'+Object.entries(card).filter(([k,v])=>k!=='id'&&k!=='createdAt'&&v).map(([k,v])=>k+': '+v).join('\n')+'\n\n【需要补全的字段】\n'+fields.join(', ');
+      const payload = { model:state.model, messages:[{role:'system',content:sys},{role:'user',content:input}], stream:false, max_tokens:2000, thinking:{type:'disabled'}, temperature:0.85 };
+      const reqHeaders = {'Content-Type':'application/json'};
+      if(state.apiKey) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
+      const res = await fetch(apiEndpoint(), { method:'POST', headers:reqHeaders, body:JSON.stringify(payload) });
+      if(!res.ok){ let d=''; try{d=(await res.json()).error?.message||''}catch{} throw new Error(res.status+' '+d); }
+      const data = await res.json();
+      const text = data.choices?.[0]?.message?.content || '';
+      const jsonStr = text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
+      const obj = JSON.parse(jsonStr);
+      if(!obj || typeof obj!=='object') throw new Error('AI 输出不是有效 JSON');
+      return obj;
+    }
+
     function openAgentEditor(agent){
       const edit = !!agent;
       agent = agent || {id:uid(), name:'', emoji:'✦', description:'', baseDirective:'', persona:'', initialScene:'', relationship:'', userProfile:''};
@@ -658,6 +926,22 @@
     function setMode(mode){ if(mode===state.mode) return; state.mode=mode; saveState(); render(); closeSide(); }
     document.querySelectorAll('#modeSwitch .mode-btn').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
     document.getElementById('wbBackBtn').onclick = ()=> setMode('rp');
+
+    // 工坊事件绑定
+    document.querySelectorAll('.ai-fill-btn[data-fill]').forEach(b=>b.onclick=()=>aiFillCard(b.dataset.fill));
+    $('#shopAiFillAll').onclick = ()=>aiFillCard(null);
+    $('#shopSaveDraft').onclick = shopSaveDraft;
+    $('#shopExportJson').onclick = shopExportJson;
+    $('#shopExportBatch').onclick = shopExportBatch;
+    $('#shopAddAgent').onclick = ()=>{
+      const card = shopReadForm();
+      const idx = state.shopEditingId ? state.workshopDrafts.findIndex(d=>d.id===state.shopEditingId) : -1;
+      shopAddToAgents(card, idx);
+    };
+    $('#shopClearDrafts').onclick = ()=>{
+      if(!state.workshopDrafts.length){ toast('草稿区已空'); return; }
+      confirmDialog('清空草稿区','将删除草稿区的 '+state.workshopDrafts.length+' 张草稿，此操作无法撤销。','全部清空',()=>{ state.workshopDrafts=[]; state.shopEditingId=null; saveState(); renderShopDrafts(); closeModal(); toast('已清空草稿区'); });
+    };
 
     loadState(); (async()=>{ await loadBuiltinCards(); render(); })(); refreshGatewayStatus();
 
