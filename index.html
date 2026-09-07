@@ -221,6 +221,7 @@
                 <button class="ai-fill-btn fill-all" id="shopAiFillAll">✨ AI 补全全部空字段</button>
                 <button class="btn ghost" id="shopSaveDraft">存入草稿区</button>
                 <button class="btn ghost" id="shopExportJson">导出 JSON</button>
+                <button class="btn danger" id="shopClearForm" title="一键清空当前表单所有字段">清空表单</button>
                 <button class="btn primary" id="shopAddAgent">加入我的角色</button>
               </div>
             </div>
@@ -468,7 +469,7 @@
       return blocks.filter(Boolean).join('\n\n');
     }
 
-    function classifyError(e){ const msg=String(e.message||e); const m=msg.match(/^\s*\d{3}\s*([\s\S]*)$/); const detail=(m&&m[1]||'').trim(); if(/401|403|unauthorized|permission/i.test(msg))return detail?'鉴权失败：'+detail.slice(0,140):'密钥无效或没有访问权限，请检查 API Key。'; if(/402|insufficient|balance/i.test(msg))return '账户余额不足或内置模型额度已用尽，请充值或更换模型。'; if(/429|rate limit/i.test(msg))return '请求过于频繁或额度已用尽，请稍后再试。'; if(/model not exist|invalid model/i.test(msg))return '模型名称无效，请在设置中重新选择模型。'; if(/network|fetch|failed to fetch/i.test(msg))return '网络请求失败，请检查网络连接或浏览器跨域限制。'; return '请求失败：'+msg.slice(0,140); }
+    function classifyError(e){ const msg=String(e.message||e); const m=msg.match(/^\s*\d{3}\s*([\s\S]*)$/); const detail=(m&&m[1]||'').trim(); if(/401|403|unauthorized|permission/i.test(msg))return detail?'鉴权失败：'+detail.slice(0,140):'密钥无效或没有访问权限，请检查 API Key。'; if(/402|insufficient|balance/i.test(msg))return '账户余额不足或内置模型额度已用尽，请充值或更换模型。'; if(/429|rate limit/i.test(msg))return '请求过于频繁或额度已用尽，请稍后再试。'; if(/model not exist|invalid model/i.test(msg))return '模型名称无效，请在设置中重新选择模型。'; if(/network|fetch|failed to fetch/i.test(msg))return '网络请求失败，请检查网络连接或浏览器跨域限制。'; if(/^400\b/.test(msg)||msg.startsWith('400'))return detail?'请求参数不被接受（400）：'+detail.slice(0,200):'请求参数不被服务接受（400），可能是模型不支持某些参数或内容过长。可尝试切换模型或降低对话长度。'; return '请求失败：'+msg.slice(0,140); }
 
     function renderAttachment(){
       const preview=$('#attachmentPreview'), nameEl=$('#attachmentName');
@@ -490,7 +491,7 @@
         payload.top_p = Number(state.topP ?? 0.9);
       } else {
         payload.thinking = { type:'enabled' };
-        payload.reasoning_effort = state.thinking;
+        payload.reasoning_effort = state.thinking === 'max' ? 'high' : state.thinking;
       }
       return payload;
     }
@@ -691,7 +692,7 @@
       if(existing && existing.length) input += '【已有的剧情摘要】\n'+existing.join('\n---\n')+'\n\n';
       input += '【新增对话内容】\n'+segmentText;
       messages.push({role:'user', content:input});
-      const payload = { model:state.model, messages, stream:false, max_tokens:2500, thinking:{type:'disabled'}, temperature:0.4 };
+      const payload = { model:state.model, messages, stream:false, max_tokens:2500, temperature:0.4 };
       const reqHeaders = {'Content-Type':'application/json'};
       if(state.apiKey) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
       const res = await fetch(apiEndpoint(), { method:'POST', headers:reqHeaders, body:JSON.stringify(payload) });
@@ -878,7 +879,7 @@
     async function callAiFillCard(card, fields){
       const sys = '你是角色卡设计师。根据用户已填的字段，为指定的空缺字段补全内容，输出严格的 JSON。\n\n【硬性要求】\n1. 只输出一个 JSON 对象，键为字段名，值为字符串；不要任何解释、注释、markdown 代码块。\n2. 字段含义：name=角色名(≤12字)、emoji=单个 emoji、description=一句话简介(≤30字)、baseDirective=底层输出设定(语气风格/绝对禁止的事/必须遵守的规范,≤200字)、persona=角色人设(核心性格/说话方式/目标/秘密,分点写,≤350字)、userProfile=用户身份设定(≤150字)、initialScene=剧情初始环境(地点/时间/天气/气氛/正在发生的事,≤180字)、relationship=用户与角色的关系(≤50字)。\n3. 已填字段保持不动，只补全空缺字段；语气与已填内容保持一致。\n4. 内容要具体、有细节、能直接用于角色扮演，禁止空泛套话。';
       const input = '【已填字段】\n'+Object.entries(card).filter(([k,v])=>k!=='id'&&k!=='createdAt'&&v).map(([k,v])=>k+': '+v).join('\n')+'\n\n【需要补全的字段】\n'+fields.join(', ');
-      const payload = { model:state.model, messages:[{role:'system',content:sys},{role:'user',content:input}], stream:false, max_tokens:2000, thinking:{type:'disabled'}, temperature:0.85 };
+      const payload = { model:state.model, messages:[{role:'system',content:sys},{role:'user',content:input}], stream:false, max_tokens:2000, temperature:0.85 };
       const reqHeaders = {'Content-Type':'application/json'};
       if(state.apiKey) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
       const res = await fetch(apiEndpoint(), { method:'POST', headers:reqHeaders, body:JSON.stringify(payload) });
@@ -941,6 +942,17 @@
     $('#shopClearDrafts').onclick = ()=>{
       if(!state.workshopDrafts.length){ toast('草稿区已空'); return; }
       confirmDialog('清空草稿区','将删除草稿区的 '+state.workshopDrafts.length+' 张草稿，此操作无法撤销。','全部清空',()=>{ state.workshopDrafts=[]; state.shopEditingId=null; saveState(); renderShopDrafts(); closeModal(); toast('已清空草稿区'); });
+    };
+    $('#shopClearForm').onclick = ()=>{
+      confirmDialog('清空表单','将清空当前正在编辑的全部字段，从空白重新开始。','清空',()=>{
+        const map = ['shopName','shopEmoji','shopDesc','shopBaseDirective','shopPersona','shopUserProfile','shopInitialScene','shopRelationship'];
+        map.forEach(id=>{ const el=$('#'+id); if(el) el.value=''; });
+        state.shopEditingId = null;
+        state.shopActiveTpl = 'blank';
+        $('#shopFormTitle').textContent = '新建角色卡';
+        document.querySelectorAll('#shopTemplates .shop-tpl').forEach(x=>x.classList.toggle('active', x.dataset.tpl==='blank'));
+        closeModal(); toast('已清空表单');
+      });
     };
 
     loadState(); (async()=>{ await loadBuiltinCards(); render(); })(); refreshGatewayStatus();
