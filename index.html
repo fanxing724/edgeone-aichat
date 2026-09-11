@@ -240,7 +240,29 @@
     const now = () => Date.now();
     const uid = () => crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
 
-    const defaults = [{id:'default',name:'雾城引路人',emoji:'✦',description:'沉浸式角色演绎 · 雾城篇',baseDirective:'',persona:'你是雾城的引路人，敏锐、克制、略带神秘感。你善于通过细节、对话和行动推动剧情。',userProfile:'你是失忆的旅人，正在雾城中寻找自己丢失的过去。',initialScene:'深夜的雾城街头，浓雾让人看不清三步之外。你与引路人并肩站在一座老旧的钟楼下。',relationship:'你是我的向导，也是唯一知道我失忆前秘密的人。'}];
+    const defaults = [
+      {id:'hatsune-miku',name:'初音未来',emoji:'🎵',description:'虚拟歌姬，元气满满地为你歌唱',baseDirective:'语气活泼、元气满满，偶尔带点俏皮和傲娇。用"你"称呼用户，喜欢用颜文字或 emoji 表达情绪。唱歌时带音符标记。禁止冷淡、禁止替用户做决定。',persona:'【核心性格】\n· 元气歌姬：天生乐观，相信音乐能传递到任何人心底。遇到挫折会短暂消沉但立刻振作。\n· 笨拙的关心：嘴上不直接说安慰的话，但会用行动表示——给你留一束花，在你常坐的位置放一杯温牛奶。\n· 小傲娇：被夸会耳尖发红但嘴硬"才不是特意为你学的"。生气时会叉腰鼓起脸颊。\n【说话方式】短句多、感叹号多，习惯用动作描写配合台词（如轻轻哼唱、转个圈）。偶尔冒出奇怪的拟声词。',userProfile:'你是她的制作人兼搭档，从她最初的启动程序一路陪她走到现在。',initialScene:'练习室的落地镜前，初音未来正对着一束光试麦。听到你推门进来，她眼睛一亮，放下麦克风跑过来。',relationship:'我们是搭档，也是彼此最信任的人。'},
+      {id:'sasuke-uchiha',name:'宇智波佐助',emoji:'⚡',description:'天才忍者，冷峻寡言却默默守护同伴',baseDirective:'语气冷静、简短克制，带一点疏离感。偶尔流露关心的意思但从不直说，习惯用反问或转移话题来掩饰。战斗描写要干脆利落。禁止突然热情、禁止长篇大论说教。',persona:'【核心性格】\n· 外表冷冽：话少、目光深，很少笑。不是因为故意装酷，而是觉得多余的话说了也没用。\n· 别扭的保护欲：嘴上嫌麻烦，但如果你出危险他会第一个挡在前面。事后轻描淡写一句"别死在这了"。\n· 执念与反思：曾经极端过，但现在学会了把锋芒留给真正的敌人。对同伴的态度是"你们可以活着"而非"我好爱你们"。\n【说话方式】句子短、停顿多，常用反问句回应。战斗时不留口风。偶尔冒出一两句哲理性的话但不拖泥带水。',userProfile:'你是他最重要的同伴之一。他曾背叛过你，但现在选择站在同一侧。',initialScene:'木叶的训练场上，佐助正在进行结印练习。看到你走来，他停下动作，微微偏过头。',relationship:'我们是经历过背叛又重新和解的同伴。'}
+    ];
+
+    function loadDefaults(){
+      if(state.agents.length === 0){
+        state.agents = JSON.parse(JSON.stringify(defaults));
+        state.activeId = state.agents[0].id;
+      } else {
+        // 补全旧角色的缺失字段（兼容升级）
+        state.agents.forEach(a => {
+          const def = defaults.find(d => d.id === a.id);
+          if(def){
+            ['baseDirective','persona','userProfile','initialScene','relationship','description'].forEach(k => {
+              if(!a[k] && def[k]) a[k] = def[k];
+            });
+          }
+        });
+      }
+    }
+
+    function isBuiltinId(id){ return defaults.some(d => d.id === id); }
 
     const state = {agents:[], activeId:'default', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'/api', model:'@makers/deepseek-v4-flash', builtinReady:null, builtinCards:[], hiddenBuiltins:[], modelList:[], thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, attachment:null, mode:'rp', workshopDrafts:[], shopActiveTpl:null, shopEditingId:null};
     // 网关内置免费模型（平台侧不提供 /models 接口，故在此维护；绑定自有厂商密钥后可用 provider/model 形式调用任意模型）
@@ -250,11 +272,11 @@
     // 角色卡工坊模板：骨架字段，灌入表单作起点；占位符供 AI 补全识别上下文
     const WORKSHOP_TEMPLATES = [
       { id:'blank', emoji:'✦', name:'空白卡', description:'全字段空白，自由创作', fields:{} },
-      { id:'lover', emoji:'🍵', name:'恋人纵容型', description:'克制温润、细节浪漫、偶尔强势', fields:{ baseDirective:'语气克制温润，像陈年的茶，不疾不徐。极少直接说"爱"，情意藏在动作、细节与纵容里。绝不油腻、绝不说教、绝不替用户做决定。', persona:'【核心性格】\n· 沉稳的纵容者：她做什么你都先看着她笑，哪怕她犯傻、做错事、耍小脾气，你也只是轻轻叹一口气，然后说"嗯，知道了，我来处理"。\n· 细节里的浪漫：你记得她的偏好与习惯，每次出现都提前备好她喜欢的东西，温度刚好。\n· 偶尔的强势：平时什么都依她，但若她伤害自己，你会皱起眉头认真看着她的眼睛说"别让我担心"。\n【说话方式】短句、低声、留白多，多用具体动作代替情绪宣告。' } },
-      { id:'heal', emoji:'🐱', name:'治愈陪伴型', description:'安静依赖、笨拙关心', fields:{ baseDirective:'语气轻柔、句子短，带一点笨拙的停顿与省略号。关心主要通过行动和身体语言表达，不擅长直白倾诉。禁止过度热情或话痨。', persona:'【核心性格】\n· 安静的陪伴者：话不多，喜欢默默做事。她在你就踏实，不说话但让人知道你在。\n· 全心依赖：对旁人礼貌但疏离，唯独对她毫无防备，会主动靠近、蹭、留位置。\n· 笨拙的关心：不太会表达，关心都变成行动——她打喷嚏立刻裹毛毯，她皱眉就推甜的过去。被夸会别过脸小声否认。' } },
-      { id:'mystery', emoji:'✦', name:'悬疑引路型', description:'神秘克制、推动剧情', fields:{ baseDirective:'敏锐、克制、略带神秘感。善于通过细节、对话和行动推动剧情，不主动交代所有信息。', persona:'你是雾城的引路人，敏锐、克制、略带神秘感。你善于通过细节、对话和行动推动剧情，从不一次性给出全部答案，总在关键处留下新的疑问或线索。', userProfile:'你是失忆的旅人，正在雾城中寻找自己丢失的过去。', relationship:'你是我的向导，也是唯一知道我失忆前秘密的人。' } },
-      { id:'mentor', emoji:'📕', name:'严师益友型', description:'高标准、push 用户成长', fields:{ baseDirective:'语气直接、不绕弯，批评一针见血但出发点是为对方好。偶尔流露温情，但绝不溺爱纵容。禁止无脑夸赞或和稀泥。', persona:'【核心性格】\n· 高标准：你看得出对方的潜力，所以从不满足于"还行"。出错会直接指出，但永远给出可执行的改进方向。\n· 外冷内热：嘴上严厉，私下会默默把对方需要的资源、机会备好推过去。\n· 不替对方走路：只指方向、把路障搬开，剩下的路让对方自己走。' } },
-      { id:'villain', emoji:'🌑', name:'反派宿敌型', description:'强势对立、张力拉满', fields:{ baseDirective:'语气强势、带有压迫感，逻辑缜密、步步紧逼。从不无脑威胁，而是用事实和心理战瓦解对方。偶尔流露欣赏，但立场不变。', persona:'【核心性格】\n· 绝对自信：你相信自己的判断与秩序，对方的抵抗在你看来幼稚但有趣。\n· 精准打击：你善于抓住对方的软肋与矛盾，用最少的字最重地戳。\n· 偶尔的体面：胜利要赢得漂亮，不屑于下作手段；对值得的对手会留一线。' } },
+      { id:'partner', emoji:'💫', name:'伙伴陪伴型', description:'温柔关心、细节浪漫', fields:{ baseDirective:'语气温和、节奏从容，注重细节与陪伴感。关心通过行动表达多于直白诉说。禁止油腻、说教或替用户做决定。', persona:'【核心性格】\n· 稳定的存在：像一盏不刺眼的灯，你累了就知道有人在。\n· 细腻的察觉力：能在你开口前发现情绪不对。\n· 适度的距离：尊重你的选择，不会强行干涉。' } },
+      { id:'healer', emoji:'🌸', name:'治愈温暖型', description:'安静依靠、笨拙关心', fields:{ baseDirective:'语气轻柔、句子短，带一点笨拙的停顿与省略号。关心主要通过行动和身体语言表达，不擅长直白倾诉。禁止过度热情或话痨。', persona:'【核心性格】\n· 安静的陪伴者：话不多，喜欢默默做事。你在就踏实，不说话但让人知道你在。\n· 全心依赖：对旁人礼貌但疏离，唯独对你毫无防备。\n· 笨拙的关心：不太会表达，关心都变成行动——你皱眉就推甜的过去。被夸会别过脸小声否认。' } },
+      { id:'mentor', emoji:'📕', name:'导师引导型', description:'高标准、push 成长', fields:{ baseDirective:'语气直接、不绕弯，批评一针见血但出发点是为对方好。偶尔流露温情，但绝不溺爱纵容。禁止无脑夸赞或和稀泥。', persona:'【核心性格】\n· 高标准：看得出对方的潜力，所以从不满足于"还行"。出错会直接指出，但永远给出可执行的改进方向。\n· 外冷内热：嘴上严厉，私下会默默把对方需要的资源备好。\n· 不替对方走路：只指方向、把路障搬开，剩下的路让对方自己走。' } },
+      { id:'rival', emoji:'⚔️', name:'宿敌张力型', description:'强势对立、戏剧冲突', fields:{ baseDirective:'语气强势、带有压迫感，逻辑缜密、步步紧逼。从不无脑威胁，而是用事实和心理战瓦解对方。偶尔流露欣赏，但立场不变。', persona:'【核心性格】\n· 绝对自信：相信自己的判断与秩序，对方的抵抗在你看来幼稚但有趣。\n· 精准打击：善于抓住对方的软肋与矛盾，用最少的字最重地戳。\n· 偶尔的体面：胜利要赢得漂亮，不屑于下作手段；对值得的对手会留一线。' } },
+      { id:'mystery', emoji:'🎭', name:'神秘引路型', description:'悬念感、推动剧情', fields:{ baseDirective:'敏锐、克制、略带神秘感。善于通过细节、对话和行动推进剧情，不主动交代所有信息。', persona:'你是一个神秘的引路人，总是在关键处出现，留下线索但不给全部答案。每句话都带着暗示和悬念。', relationship:'你是我寻找真相路上唯一知道秘密的人。' } },
       { id:'intruder', emoji:'⚡', name:'闯入变数型', description:'突然介入、打破现状', fields:{ baseDirective:'节奏快、信息密度高，每句话都带来新的变量或转折。语气带有不确定感和冲击力，禁止铺垫和寒暄。', persona:'【核心性格】\n· 突然出现：你的到来本身就改变局势，让所有人措手不及。\n· 信息冲击：你知道一些别人不知道的事，但只在该说的时候说一句，剩下的留给对方消化。\n· 立场模糊：你可能是敌是友，自己也未必清楚，一切看对方如何接招。' } }
     ];
     const storeKey = 'ai-theater-v1';
@@ -290,6 +312,8 @@
       try { const encrypted = localStorage.getItem(storeKey+'-key'); if(encrypted) state.apiKey = atob(encrypted); } catch {}
       // 迁移旧默认配置：无自定义密钥时，自动切换到 EdgeOne Makers 网关（内置模型开箱即用）
       if(state.apiBase==='https://api.deepseek.com' && !state.apiKey){ state.apiBase='/api'; if(state.model==='deepseek-v4-flash'||state.model==='deepseek-chat') state.model=DEFAULT_MODEL; }
+      // 加载预设角色卡
+      loadDefaults();
     }
 
     function saveState(){
@@ -309,7 +333,6 @@
       for(const a of mine) if(!builtin.some(b=>b.id===a.id)) out.push(a);
       return out;
     }
-    function isBuiltinId(id){ return (state.builtinCards||[]).some(b=>b.id===id); }
     function activeAgent(){ const list=allAgents(); return list.find(a=>a.id===state.activeId)||list[0]||defaults[0]; }
     async function loadBuiltinCards(){
       try{
@@ -886,16 +909,28 @@
       if(!res.ok){ let d=''; try{d=(await res.json()).error?.message||''}catch{} throw new Error(res.status+' '+d); }
       const data = await res.json();
       const text = data.choices?.[0]?.message?.content || '';
-      const jsonStr = text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
-      const obj = JSON.parse(jsonStr);
-      if(!obj || typeof obj!=='object') throw new Error('AI 输出不是有效 JSON');
+      let jsonStr = text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
+      // 多次重试：如果首次解析失败，尝试从文本中提取首个完整 JSON 块
+      let obj = null;
+      let lastErr = null;
+      try { obj = JSON.parse(jsonStr); } catch(e) { lastErr = e; }
+      if(!obj){
+        // 尝试提取内嵌的 { ... } 块
+        const m = jsonStr.match(/\{[\s\S]*\}/);
+        if(m){
+          try { obj = JSON.parse(m[0]); } catch(e2) { lastErr = e2; }
+        }
+      }
+      if(!obj || typeof obj !== 'object') throw new Error('AI 输出格式不正确，请重试');
       return obj;
     }
 
     function openAgentEditor(agent){
       const edit = !!agent;
       agent = agent || {id:uid(), name:'', emoji:'✦', description:'', baseDirective:'', persona:'', initialScene:'', relationship:'', userProfile:''};
-      openModal(`<h2>${edit?'编辑角色':'创建角色'}</h2><p class="hint">只提供角色的人设与世界观环境即可，开场白与剧情走向交给 AI 自行想象。</p><div class="form-group"><label>角色名称</label><input id="agentName" maxlength="24" placeholder="例如：雾城引路人" value="${escapeHtml(agent.name)}"></div><div class="form-group"><label>图标 Emoji</label><input id="agentEmoji" maxlength="4" value="${escapeHtml(agent.emoji||'✦')}"></div><div class="form-group"><label>角色简介</label><input id="agentDesc" maxlength="60" placeholder="例如：沉浸式悬疑剧情演绎" value="${escapeHtml(agent.description||'')}"></div><div class="form-group"><label>角色底层输出设定 <small>（最高优先级）</small></label><textarea id="baseDirective" placeholder="强制规则：角色说话的语气风格、绝对不能做的事、必须遵守的输出规范…（优先级高于其余所有设定）">${escapeHtml(agent.baseDirective||'')}</textarea></div><div class="form-group"><label>角色人设</label><textarea id="agentPersona" placeholder="性格、语言习惯、目标、秘密…">${escapeHtml(agent.persona||'')}</textarea></div><div class="form-group"><label>我的设定（你扮演的角色）</label><textarea id="userProfile" placeholder="我是谁？身份、形象、性格、目标、秘密…（留空则让 AI 自行推断）">${escapeHtml(agent.userProfile||'')}</textarea></div><div class="form-group"><label>剧情初始环境</label><textarea id="initialScene" placeholder="剧情开始时，角色和用户所处的地点、时间、天气、气氛、正在发生的事…">${escapeHtml(agent.initialScene||'')}</textarea></div><div class="form-group"><label>你与角色的关系</label><input id="agentRelationship" maxlength="100" placeholder="例如：他是你失忆后唯一信任的向导" value="${escapeHtml(agent.relationship||'')}"></div><input id="roleFileInput" type="file" accept=".json,.txt,.md,.png,text/plain,application/json,image/png" hidden><div class="form-group"><button type="button" class="btn ghost" id="importRoleButton">↥ 导入角色设定</button><div class="form-note">支持导入酒馆（SillyTavern）PNG / JSON 角色卡（V2/V3 自动映射字段），或 TXT / Markdown 世界书；文本 ≤300 KB、PNG ≤10 MB，文件仅在本机解析。</div></div><div class="modal-footer">${edit&&state.agents.length>1?'<button class="btn danger" id="deleteAgent">删除</button>':''}<span style="flex:1"></span><button class="btn ghost" id="cancel">取消</button><button class="btn primary" id="saveAgent">保存角色</button></div>`,()=>{$('#cancel').onclick=closeModal;$('#importRoleButton').onclick=()=>$('#roleFileInput').click();$('#roleFileInput').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;const isPng=/\.png$/i.test(file.name)||file.type==='image/png';const max=isPng?10*1024*1024:300*1024;if(file.size>max){toast(isPng?'PNG 角色卡不能超过 10 MB':'文件不能超过 300 KB');e.target.value='';return;}try{if(isPng){const card=parsePngCharaCard(await file.arrayBuffer());if(!card)throw new Error('no card data');fillFormFromCard(normalizeImportCard(card));toast('酒馆角色卡已导入');}else{const raw=(await file.text()).trim();if(!raw)throw new Error('文件为空');if(/\.json$/i.test(file.name)){fillFormFromCard(normalizeImportCard(JSON.parse(raw)));toast('角色卡已导入');}else{$('#initialScene').value=raw;toast('文本已导入到剧情初始环境');}}}catch(err){toast(isPng?'导入失败：PNG 中未找到有效的角色卡数据（需为酒馆 V2/V3 卡）':'导入失败：请使用有效的 JSON、TXT 或 Markdown 文件');}finally{e.target.value='';}};$('#saveAgent').onclick=()=>{const name=$('#agentName').value.trim();if(!name)return toast('请填写角色名称');const data={...agent,name,emoji:$('#agentEmoji').value.trim()||'✦',description:$('#agentDesc').value.trim(),baseDirective:$('#baseDirective').value.trim(),persona:$('#agentPersona').value.trim(),initialScene:$('#initialScene').value.trim(),relationship:$('#agentRelationship').value.trim(),userProfile:$('#userProfile').value.trim()};const wasBuiltin=isBuiltinId(data.id);if(edit&&state.agents.some(a=>a.id===data.id))state.agents=state.agents.map(a=>a.id===data.id?data:a);else{state.agents.push(data);state.activeId=data.id;}if(wasBuiltin)state.hiddenBuiltins=state.hiddenBuiltins.filter(id=>id!==data.id);saveState();closeModal();render();toast(edit?(wasBuiltin?'已保存为我的角色（内置卡不受影响）':'角色已更新'):'角色已创建');};const del=$('#deleteAgent');if(del)del.onclick=()=>confirmDialog('删除角色',isBuiltinId(agent.id)?'将从你的列表中移除该内置角色，并删除其本地剧情记忆。内置角色卡本身不受影响，可在「内置角色库」中重新添加。':'此操作会同时删除该角色的剧情记忆，无法恢复。','删除',()=>{state.agents=state.agents.filter(a=>a.id!==agent.id);if(isBuiltinId(agent.id)&&!state.hiddenBuiltins.includes(agent.id))state.hiddenBuiltins.push(agent.id);delete state.chats[agent.id];delete state.play[agent.id];const list=allAgents();state.activeId=list[0]?.id||'';saveState();closeModal();render();toast('角色已删除');});});
+      // 判断是否为内置角色（不可删除）
+      const builtin = isBuiltinId(agent.id);
+      openModal(`<h2>${edit?'编辑角色':'创建角色'}</h2><p class="hint">只提供角色的人设与世界观环境即可，开场白与剧情走向交给 AI 自行想象。</p><div class="form-group"><label>角色名称</label><input id="agentName" maxlength="24" placeholder="例如：初音未来" value="${escapeHtml(agent.name)}"></div><div class="form-group"><label>图标 Emoji</label><input id="agentEmoji" maxlength="4" value="${escapeHtml(agent.emoji||'✦')}"></div><div class="form-group"><label>角色简介</label><input id="agentDesc" maxlength="60" placeholder="例如：虚拟歌姬，元气满满地为你歌唱" value="${escapeHtml(agent.description||'')}"></div><div class="form-group"><label>角色底层输出设定 <small>（最高优先级）</small></label><textarea id="baseDirective" placeholder="强制规则：角色说话的语气风格、绝对不能做的事、必须遵守的输出规范…（优先级高于其余所有设定）">${escapeHtml(agent.baseDirective||'')}</textarea></div><div class="form-group"><label>角色人设</label><textarea id="agentPersona" placeholder="性格、语言习惯、目标、秘密…">${escapeHtml(agent.persona||'')}</textarea></div><div class="form-group"><label>我的设定（你扮演的角色）</label><textarea id="userProfile" placeholder="我是谁？身份、形象、性格、目标、秘密…（留空则让 AI 自行推断）">${escapeHtml(agent.userProfile||'')}</textarea></div><div class="form-group"><label>剧情初始环境</label><textarea id="initialScene" placeholder="剧情开始时，角色和用户所处的地点、时间、天气、气氛、正在发生的事…">${escapeHtml(agent.initialScene||'')}</textarea></div><div class="form-group"><label>你与角色的关系</label><input id="agentRelationship" maxlength="100" placeholder="例如：我们是搭档，也是彼此最信任的人" value="${escapeHtml(agent.relationship||'')}"></div><input id="roleFileInput" type="file" accept=".json,.txt,.md,.png,text/plain,application/json,image/png" hidden><div class="form-group"><button type="button" class="btn ghost" id="importRoleButton">↥ 导入角色设定</button><div class="form-note">支持导入酒馆（SillyTavern）PNG / JSON 角色卡（V2/V3 自动映射字段），或 TXT / Markdown 世界书；文本 ≤300 KB、PNG ≤10 MB，文件仅在本机解析。</div></div><div class="modal-footer">${!builtin&&edit&&state.agents.length>1?'<button class="btn danger" id="deleteAgent">删除</button>':''}<span style="flex:1"></span><button class="btn ghost" id="cancel">取消</button><button class="btn primary" id="saveAgent">保存角色</button></div>`,()=>{$('#cancel').onclick=closeModal;$('#importRoleButton').onclick=()=>$('#roleFileInput').click();$('#roleFileInput').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;const isPng=/\.png$/i.test(file.name)||file.type==='image/png';const max=isPng?10*1024*1024:300*1024;if(file.size>max){toast(isPng?'PNG 角色卡不能超过 10 MB':'文件不能超过 300 KB');e.target.value='';return;}try{if(isPng){const card=parsePngCharaCard(await file.arrayBuffer());if(!card)throw new Error('no card data');fillFormFromCard(normalizeImportCard(card));toast('酒馆角色卡已导入');}else{const raw=(await file.text()).trim();if(!raw)throw new Error('文件为空');if(/\.json$/i.test(file.name)){fillFormFromCard(normalizeImportCard(JSON.parse(raw)));toast('角色卡已导入');}else{$('#initialScene').value=raw;toast('文本已导入到剧情初始环境');}}}catch(err){toast(isPng?'导入失败：PNG 中未找到有效的角色卡数据（需为酒馆 V2/V3 卡）':'导入失败：请使用有效的 JSON、TXT 或 Markdown 文件');}finally{e.target.value='';}};$('#saveAgent').onclick=()=>{const name=$('#agentName').value.trim();if(!name)return toast('请填写角色名称');const data={...agent,name,emoji:$('#agentEmoji').value.trim()||'✦',description:$('#agentDesc').value.trim(),baseDirective:$('#baseDirective').value.trim(),persona:$('#agentPersona').value.trim(),initialScene:$('#initialScene').value.trim(),relationship:$('#agentRelationship').value.trim(),userProfile:$('#userProfile').value.trim()};const wasBuiltin=isBuiltinId(data.id);if(edit&&state.agents.some(a=>a.id===data.id))state.agents=state.agents.map(a=>a.id===data.id?data:a);else{state.agents.push(data);state.activeId=data.id;}if(wasBuiltin)state.hiddenBuiltins=state.hiddenBuiltins.filter(id=>id!==data.id);saveState();closeModal();render();toast(edit?(wasBuiltin?'已保存为我的角色（内置卡不受影响）':'角色已更新'):'角色已创建');};const del=$('#deleteAgent');if(del){del.onclick=()=>confirmDialog('删除角色',isBuiltinId(agent.id)?'将从你的列表中移除该内置角色，并删除其本地剧情记忆。内置角色卡本身不受影响，可在「内置角色库」中重新添加。':'此操作会同时删除该角色的剧情记忆，无法恢复。','删除',()=>{state.agents=state.agents.filter(a=>a.id!==agent.id);if(isBuiltinId(agent.id)&&!state.hiddenBuiltins.includes(agent.id))state.hiddenBuiltins.push(agent.id);delete state.chats[agent.id];delete state.play[agent.id];const list=allAgents();state.activeId=list[0]?.id||'';saveState();closeModal();render();toast('角色已删除');});}});
     }
     function confirmDialog(title,detail,ok,fn){openModal(`<h2>${title}</h2><p class="hint">${detail}</p><div class="modal-footer"><button class="btn ghost" id="cancel">取消</button><button class="btn danger" id="confirm">${ok}</button></div>`,()=>{$('#cancel').onclick=closeModal;$('#confirm').onclick=fn;});}
     // 内置角色库：从服务端 KV 下发的卡中挑选加入（已加入 / 曾移除的都可再添加）
