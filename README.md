@@ -8,6 +8,7 @@
 
 - 开箱即用的内置模型（平台侧密钥存于环境变量，前端零接触）
 - 可选自定义 OpenAI 兼容 API（BYOK，密钥仅存本地）
+- 对外模型代理转发（`/v1/*`）：第三方 OpenAI 兼容客户端经本站调用 EdgeOne 模型，真实密钥不出服务端
 - **三模式切换**：剧情演绎（RP）/ 世界书（占位预留）/ 角色卡工坊
 - 角色卡系统：内置卡、自定义卡、支持导入 SillyTavern（酒馆）V2/V3 角色卡（PNG/JSON）
 - 流式对话（SSE）实时渲染
@@ -18,12 +19,18 @@
 ## 技术架构
 
 ```
-浏览器（index.html 单页应用）
+浏览器（index.html 单页应用）—— 同源调用，不发 CORS 头
    │
    ├── /api/cards ────────────→ 角色卡 API（KV 优先，FALLBACK 兜底）
    ├── /api/status ───────────→ 网关状态检查（是否配置平台密钥）
    ├── /api/models ───────────→ 模型列表代理（透传 /models）
    └── /api/chat/completions ─→ Makers Models 统一网关代理（SSE 透传）
+
+第三方 OpenAI 兼容客户端 —— 跨域调用，带服务自有访问令牌
+   │
+   ├── /v1/chat/completions ──┐
+   ├── /v1/models ────────────┼→ EdgeOne 模型网关（上游密钥锁定为服务端 MAKERS_MODELS_KEY）
+   └── /v1/status ────────────┘
 ```
 
 ### 目录结构
@@ -32,12 +39,17 @@
 .
 ├── index.html              # 前端单页应用（全部 UI/逻辑/样式内联）
 ├── functions/              # EdgeOne Pages 边缘函数
-│   └── api/
-│       ├── cards.js        # 内置角色卡下发（KV 优先，代码兜底）
-│       ├── status.js       # 平台密钥状态查询
-│       ├── models.js       # 模型列表代理（支持 BYOK）
+│   ├── api/                # 本站页面专用（同源、无 CORS 头）
+│   │   ├── cards.js        # 内置角色卡下发（KV 优先，代码兜底）
+│   │   ├── status.js       # 平台密钥状态查询
+│   │   ├── models.js       # 模型列表代理（支持 BYOK）
+│   │   └── chat/
+│   │       └── completions.js  # Makers Models 网关代理（SSE 流式透传）
+│   └── v1/                 # 对外开放代理（OpenAI 兼容、带 CORS 与访问令牌校验）
+│       ├── status.js       # 部署自查探针（免鉴权，只返回布尔值）
+│       ├── models.js       # 对外模型列表
 │       └── chat/
-│           └── completions.js  # Makers Models 网关代理（SSE 流式透传）
+│           └── completions.js  # 对外对话补全转发
 └── .gitignore
 ```
 
@@ -53,7 +65,7 @@
 
 ### 🔧 角色卡工坊
 
-- **7 个内置模板**：空白卡 / 恋人纵容型 / 治愈陪伴型 / 悬疑引路型 / 严师益友型 / 反派宿敌型 / 闯入变数型
+- **7 个内置模板**：空白卡 / 伙伴陪伴型 / 治愈温暖型 / 导师引导型 / 宿敌张力型 / 神秘引路型 / 闯入变数型
 - 选择模板自动填入骨架字段（人设、底层输出规则等）作为起点
 - **字段级「✨ 补全」** 与 **「AI 补全全部空字段」**：调用 `/api/chat/completions` 非流式生成 JSON，智能补齐缺省字段
 - **草稿区**：持久化到 localStorage，支持编辑 / 复制 / 加入角色 / 删除；加入角色后自动从草稿移除并切回剧情演绎
@@ -77,10 +89,47 @@
 - **模型名归一化**：不带 `/` 的模型名自动补 `@makers/` 前缀；带 `/` 的按 `provider/model` 原样透传
 - **内置免费模型**：DeepSeek、MiniMax、Kimi、Hy3 等（无 `/models` 接口时由前端 `BUILTIN_MODELS` 维护清单）
 
+### 🔀 开放模型代理（/v1）
+
+EdgeOne 的模型接口只能由 EdgeOne 自己的服务调用，第三方 OpenAI 兼容客户端无法直接使用。因此本站在聊天功能之外，同时充当**模型网关的唯一出口**：
+
+- **上游密钥锁定**：真正调用 EdgeOne 网关的密钥只存在服务端环境变量 `MAKERS_MODELS_KEY` 中，任何情况下都不会出现在请求、响应或日志里
+- **双层密钥**：第三方调用 `/v1/*` 时携带的 `Authorization: Bearer <token>` 是**本站自己签发的访问令牌**（`PROXY_ACCESS_KEYS`），只用于准入校验，边缘函数校验通过后替换成平台密钥再转发——调用方永远拿不到真实模型密钥
+- **访问控制**：可签发多个令牌（逗号 / 分号 / 换行分隔），便于按调用方分发与单独吊销
+
+| 路由 | 方法 | 说明 |
+|---|---|---|
+| `/v1/chat/completions` | POST | 对话补全，`stream: true` 时 SSE 原样透传 |
+| `/v1/models` | GET | 模型列表；上游无 `/models` 时回落已知清单 |
+| `/v1/status` | GET | 部署自查探针，免鉴权，仅返回 `{ proxy, gateway }` 两个布尔值 |
+
+**fail-closed**：未配置 `PROXY_ACCESS_KEYS` 时 `/v1/*` 整体返回 `503`，不会退化成无鉴权的公开中继。
+
+```bash
+# 部署后自查
+curl https://你的域名/v1/status
+# {"proxy":true,"gateway":true}
+
+# 对话补全（裸模型名会自动补 @makers/ 前缀）
+curl https://你的域名/v1/chat/completions \
+  -H "Authorization: Bearer <访问令牌>" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"deepseek-v4-flash","messages":[{"role":"user","content":"你好"}]}'
+```
+
+任何 OpenAI SDK 直接把 `base_url` 指向本站即可：
+
+```python
+from openai import OpenAI
+client = OpenAI(base_url="https://你的域名/v1", api_key="<访问令牌>")
+```
+
+**跨域**：默认对任意 Origin 返回 CORS 头（浏览器内的第三方页面可用）。若只想放行已知站点，配置 `PROXY_ALLOWED_ORIGINS`（留空即 `*`）；纯服务端调用不受此项影响。
+
 ### 📝 角色卡管理
 
 - 创建/编辑/删除自定义角色
-- 服务端 KV 下发内置角色（沈砚、苏棠、雾城引路人等），运营侧可随时更新
+- 服务端 KV 下发内置角色（当前兜底卡：沈砚、苏棠），运营侧可随时增删
 - 支持导入 SillyTavern PNG/JSON 角色卡（V2/V3 自动映射字段）或 TXT/Markdown 文件
 
 ### 💬 对话体验
@@ -99,7 +148,9 @@
 2. 上传/关联仓库代码
 3. **设置环境变量**：
    ```
-   MAKERS_MODELS_KEY=sk-xxxx  # Makers Models 网关密钥
+   MAKERS_MODELS_KEY=sk-xxxx             # Makers Models 网关密钥（上游，调用方不可见）
+   PROXY_ACCESS_KEYS=your-service-key     # 本站自签发的对外访问令牌，多个用逗号分隔；不配则 /v1/* 关闭
+   PROXY_ALLOWED_ORIGINS=                 # 可选，跨域来源白名单；留空表示允许任意 Origin
    ```
 4. **绑定 KV 命名空间**（可选）：
    - 变量名：`CARDS_KV`
@@ -118,11 +169,15 @@
 | 变量名 | 用途 | 是否必填 |
 |---|---|---|
 | `MAKERS_MODELS_KEY` | 平台侧 Makers Models 密钥，供内置模型代理使用 | 使用内置模型时必填 |
+| `PROXY_ACCESS_KEYS` | 对外代理 `/v1/*` 的访问令牌白名单，逗号/分号/换行分隔（单数别名 `PROXY_ACCESS_KEY` 同样识别） | 开放 `/v1/*` 时必填，未配置则该路由整体 503 |
+| `PROXY_ALLOWED_ORIGINS` | 限制可跨域调用 `/v1/*` 的浏览器来源 | 可选，留空表示 `*` |
 | `CARDS_KV` | 绑定 KV 命名空间，覆盖内置角色卡 | 可选，未配置时使用代码内兜底卡 |
 
 ## 安全设计
 
-- **不输出 CORS 头**：API 仅允许同源页面调用，防止其他网站跨站盗刷平台密钥
+- **`/api/*` 不输出 CORS 头**：仅允许同源页面调用，防止其他网站跨站盗刷平台密钥
+- **对外代理密钥分离**：`/v1/*` 的调用方令牌只在本边缘函数内校验，校验通过后替换为服务端 `MAKERS_MODELS_KEY` 再转发，真实密钥不出现在请求、响应或调用方手里
+- **默认关闭**：未配置 `PROXY_ACCESS_KEYS` 时 `/v1/*` 整体返回 503，不会意外变成公开中继
 - **密钥分级保护**：自定义密钥只存于浏览器 localStorage；平台密钥存于服务端环境变量，前端全程接触不到
 - **模型列表请求不落 URL**：密钥通过请求体传递，不进入访问日志
 - **响应禁缓存**：所有 API 均设置 `cache-control: no-store`
