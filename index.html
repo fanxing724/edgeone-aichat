@@ -246,39 +246,22 @@
     ];
 
     function loadDefaults(){
-      // 一次性迁移：清理已废弃的旧版默认角色（雾城引路人 id:'default'）
-      const LEGACY_REMOVED_IDS = ['default'];
+      // 一次性迁移：清理已废弃的旧默认角色（前端 defaults 的 'default' 与服务端旧下发的 'builtin-guide'）
+      // 同时把这些 id 加入 hiddenBuiltins，避免服务端缓存或历史数据再次复活
+      const LEGACY_REMOVED_IDS = ['default','builtin-guide'];
+      let changed = false;
       const beforeLen = state.agents.length;
       state.agents = state.agents.filter(a => !LEGACY_REMOVED_IDS.includes(a.id));
-      if(state.agents.length !== beforeLen){
-        LEGACY_REMOVED_IDS.forEach(id => { delete state.chats[id]; delete state.play[id]; });
-      }
-      // 合并新预设：把 defaults 中用户尚未拥有的角色加入；已有同 id 则补全缺失字段
-      const existingIds = new Set(state.agents.map(a=>a.id));
-      defaults.forEach(d => {
-        if(!existingIds.has(d.id)){
-          state.agents.push(JSON.parse(JSON.stringify(d)));
-        } else {
-          const a = state.agents.find(x=>x.id===d.id);
-          if(a){
-            ['name','emoji','description','baseDirective','persona','userProfile','initialScene','relationship'].forEach(k=>{
-              if(!a[k] && d[k]) a[k] = d[k];
-            });
-          }
-        }
+      if(state.agents.length !== beforeLen) changed = true;
+      LEGACY_REMOVED_IDS.forEach(id => {
+        if(state.chats[id]){ delete state.chats[id]; changed = true; }
+        if(state.play[id]){ delete state.play[id]; changed = true; }
+        if(!state.hiddenBuiltins.includes(id)){ state.hiddenBuiltins.push(id); changed = true; }
       });
-      // 校正 activeId：若指向已删除/不存在的角色，回落到第一个可用角色
-      const validIds = state.agents.map(a=>a.id);
-      if(!state.activeId || !validIds.includes(state.activeId)){
-        state.activeId = validIds[0] || '';
-      }
-      if(!state.activeId && defaults.length){
-        state.agents = JSON.parse(JSON.stringify(defaults));
-        state.activeId = state.agents[0].id;
-      }
+      // activeId 若指向已清理角色，临时清空，等 loadBuiltinCards 完成后再校正
+      if(LEGACY_REMOVED_IDS.includes(state.activeId)){ state.activeId = ''; changed = true; }
+      if(changed){ try{ saveState(); }catch{} }
     }
-
-    function isBuiltinId(id){ return defaults.some(d => d.id === id); }
 
     const state = {agents:[], activeId:'hatsune-miku', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'/api', model:'@makers/deepseek-v4-flash', builtinReady:null, builtinCards:[], hiddenBuiltins:[], modelList:[], thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, attachment:null, mode:'rp', workshopDrafts:[], shopActiveTpl:null, shopEditingId:null};
     // 网关内置免费模型（平台侧不提供 /models 接口，故在此维护；绑定自有厂商密钥后可用 provider/model 形式调用任意模型）
@@ -346,18 +329,32 @@
       const byId=new Map(mine.map(a=>[a.id,a]));
       const out=[];
       for(const b of builtin){ if(hidden.has(b.id)) continue; out.push(byId.has(b.id)?byId.get(b.id):b); }
-      for(const a of mine) if(!builtin.some(b=>b.id===a.id)) out.push(a);
+      for(const a of mine){ if(hidden.has(a.id)) continue; if(!builtin.some(b=>b.id===a.id)) out.push(a); }
       return out;
     }
     function activeAgent(){ const list=allAgents(); return list.find(a=>a.id===state.activeId)||list[0]||defaults[0]; }
+    function isBuiltinId(id){
+      if(defaults.some(d => d.id === id)) return true;
+      if((state.builtinCards||[]).some(b => b.id === id)) return true;
+      return false;
+    }
     async function loadBuiltinCards(){
+      let serverCards = [];
       try{
-        const res=await fetch('/api/cards'); if(!res.ok) return;
-        const data=await res.json();
-        if(Array.isArray(data.cards)&&data.cards.length) state.builtinCards=data.cards.filter(c=>c&&c.id&&c.name);
+        const res = await fetch('/api/cards');
+        if(res.ok){
+          const data = await res.json();
+          if(Array.isArray(data.cards)) serverCards = data.cards.filter(c=>c&&c.id&&c.name);
+        }
       }catch{}
-      if(!allAgents().length) state.agents=defaults.map(a=>({...a}));
-      const list=allAgents(); if(!list.some(a=>a.id===state.activeId)) state.activeId=list[0]?.id||'';
+      // 合并：先 defaults 后 server，server 端覆盖同名 id；hiddenBuiltins 在 allAgents 阶段统一过滤
+      const merged = new Map();
+      defaults.forEach(d => merged.set(d.id, JSON.parse(JSON.stringify(d))));
+      serverCards.forEach(c => merged.set(c.id, c));
+      state.builtinCards = Array.from(merged.values());
+      // 校正 activeId：若指向已删除/未加载角色，回落到第一个可用角色
+      const list = allAgents();
+      if(!list.some(a=>a.id===state.activeId)) state.activeId = list[0]?.id || '';
     }
     function apiEndpoint(){ let base=(state.apiBase||'/api').trim().replace(/\/+$/,''); if(/\/chat\/completions$/i.test(base)) return base; return base+'/chat/completions'; }
     function chat(){ if(!Array.isArray(state.chats[state.activeId])) state.chats[state.activeId]=[]; return state.chats[state.activeId]; }
@@ -944,9 +941,9 @@
     function openAgentEditor(agent){
       const edit = !!agent;
       agent = agent || {id:uid(), name:'', emoji:'✦', description:'', baseDirective:'', persona:'', initialScene:'', relationship:'', userProfile:''};
-      // 判断是否为内置角色（不可删除）
+      // 内置卡（前端 defaults + 服务端 builtinCards）走"软删除：加入 hiddenBuiltins"，自定义走"硬删除：从 agents 移除"
       const builtin = isBuiltinId(agent.id);
-      openModal(`<h2>${edit?'编辑角色':'创建角色'}</h2><p class="hint">只提供角色的人设与世界观环境即可，开场白与剧情走向交给 AI 自行想象。</p><div class="form-group"><label>角色名称</label><input id="agentName" maxlength="24" placeholder="例如：初音未来" value="${escapeHtml(agent.name)}"></div><div class="form-group"><label>图标 Emoji</label><input id="agentEmoji" maxlength="4" value="${escapeHtml(agent.emoji||'✦')}"></div><div class="form-group"><label>角色简介</label><input id="agentDesc" maxlength="60" placeholder="例如：虚拟歌姬，元气满满地为你歌唱" value="${escapeHtml(agent.description||'')}"></div><div class="form-group"><label>角色底层输出设定 <small>（最高优先级）</small></label><textarea id="baseDirective" placeholder="强制规则：角色说话的语气风格、绝对不能做的事、必须遵守的输出规范…（优先级高于其余所有设定）">${escapeHtml(agent.baseDirective||'')}</textarea></div><div class="form-group"><label>角色人设</label><textarea id="agentPersona" placeholder="性格、语言习惯、目标、秘密…">${escapeHtml(agent.persona||'')}</textarea></div><div class="form-group"><label>我的设定（你扮演的角色）</label><textarea id="userProfile" placeholder="我是谁？身份、形象、性格、目标、秘密…（留空则让 AI 自行推断）">${escapeHtml(agent.userProfile||'')}</textarea></div><div class="form-group"><label>剧情初始环境</label><textarea id="initialScene" placeholder="剧情开始时，角色和用户所处的地点、时间、天气、气氛、正在发生的事…">${escapeHtml(agent.initialScene||'')}</textarea></div><div class="form-group"><label>你与角色的关系</label><input id="agentRelationship" maxlength="100" placeholder="例如：我们是搭档，也是彼此最信任的人" value="${escapeHtml(agent.relationship||'')}"></div><input id="roleFileInput" type="file" accept=".json,.txt,.md,.png,text/plain,application/json,image/png" hidden><div class="form-group"><button type="button" class="btn ghost" id="importRoleButton">↥ 导入角色设定</button><div class="form-note">支持导入酒馆（SillyTavern）PNG / JSON 角色卡（V2/V3 自动映射字段），或 TXT / Markdown 世界书；文本 ≤300 KB、PNG ≤10 MB，文件仅在本机解析。</div></div><div class="modal-footer">${!builtin&&edit&&state.agents.length>1?'<button class="btn danger" id="deleteAgent">删除</button>':''}<span style="flex:1"></span><button class="btn ghost" id="cancel">取消</button><button class="btn primary" id="saveAgent">保存角色</button></div>`,()=>{$('#cancel').onclick=closeModal;$('#importRoleButton').onclick=()=>$('#roleFileInput').click();$('#roleFileInput').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;const isPng=/\.png$/i.test(file.name)||file.type==='image/png';const max=isPng?10*1024*1024:300*1024;if(file.size>max){toast(isPng?'PNG 角色卡不能超过 10 MB':'文件不能超过 300 KB');e.target.value='';return;}try{if(isPng){const card=parsePngCharaCard(await file.arrayBuffer());if(!card)throw new Error('no card data');fillFormFromCard(normalizeImportCard(card));toast('酒馆角色卡已导入');}else{const raw=(await file.text()).trim();if(!raw)throw new Error('文件为空');if(/\.json$/i.test(file.name)){fillFormFromCard(normalizeImportCard(JSON.parse(raw)));toast('角色卡已导入');}else{$('#initialScene').value=raw;toast('文本已导入到剧情初始环境');}}}catch(err){toast(isPng?'导入失败：PNG 中未找到有效的角色卡数据（需为酒馆 V2/V3 卡）':'导入失败：请使用有效的 JSON、TXT 或 Markdown 文件');}finally{e.target.value='';}};$('#saveAgent').onclick=()=>{const name=$('#agentName').value.trim();if(!name)return toast('请填写角色名称');const data={...agent,name,emoji:$('#agentEmoji').value.trim()||'✦',description:$('#agentDesc').value.trim(),baseDirective:$('#baseDirective').value.trim(),persona:$('#agentPersona').value.trim(),initialScene:$('#initialScene').value.trim(),relationship:$('#agentRelationship').value.trim(),userProfile:$('#userProfile').value.trim()};const wasBuiltin=isBuiltinId(data.id);if(edit&&state.agents.some(a=>a.id===data.id))state.agents=state.agents.map(a=>a.id===data.id?data:a);else{state.agents.push(data);state.activeId=data.id;}if(wasBuiltin)state.hiddenBuiltins=state.hiddenBuiltins.filter(id=>id!==data.id);saveState();closeModal();render();toast(edit?(wasBuiltin?'已保存为我的角色（内置卡不受影响）':'角色已更新'):'角色已创建');};const del=$('#deleteAgent');if(del){del.onclick=()=>confirmDialog('删除角色',isBuiltinId(agent.id)?'将从你的列表中移除该内置角色，并删除其本地剧情记忆。内置角色卡本身不受影响，可在「内置角色库」中重新添加。':'此操作会同时删除该角色的剧情记忆，无法恢复。','删除',()=>{state.agents=state.agents.filter(a=>a.id!==agent.id);if(isBuiltinId(agent.id)&&!state.hiddenBuiltins.includes(agent.id))state.hiddenBuiltins.push(agent.id);delete state.chats[agent.id];delete state.play[agent.id];const list=allAgents();state.activeId=list[0]?.id||'';saveState();closeModal();render();toast('角色已删除');});}});
+      openModal(`<h2>${edit?'编辑角色':'创建角色'}</h2><p class="hint">只提供角色的人设与世界观环境即可，开场白与剧情走向交给 AI 自行想象。</p><div class="form-group"><label>角色名称</label><input id="agentName" maxlength="24" placeholder="例如：初音未来" value="${escapeHtml(agent.name)}"></div><div class="form-group"><label>图标 Emoji</label><input id="agentEmoji" maxlength="4" value="${escapeHtml(agent.emoji||'✦')}"></div><div class="form-group"><label>角色简介</label><input id="agentDesc" maxlength="60" placeholder="例如：虚拟歌姬，元气满满地为你歌唱" value="${escapeHtml(agent.description||'')}"></div><div class="form-group"><label>角色底层输出设定 <small>（最高优先级）</small></label><textarea id="baseDirective" placeholder="强制规则：角色说话的语气风格、绝对不能做的事、必须遵守的输出规范…（优先级高于其余所有设定）">${escapeHtml(agent.baseDirective||'')}</textarea></div><div class="form-group"><label>角色人设</label><textarea id="agentPersona" placeholder="性格、语言习惯、目标、秘密…">${escapeHtml(agent.persona||'')}</textarea></div><div class="form-group"><label>我的设定（你扮演的角色）</label><textarea id="userProfile" placeholder="我是谁？身份、形象、性格、目标、秘密…（留空则让 AI 自行推断）">${escapeHtml(agent.userProfile||'')}</textarea></div><div class="form-group"><label>剧情初始环境</label><textarea id="initialScene" placeholder="剧情开始时，角色和用户所处的地点、时间、天气、气氛、正在发生的事…">${escapeHtml(agent.initialScene||'')}</textarea></div><div class="form-group"><label>你与角色的关系</label><input id="agentRelationship" maxlength="100" placeholder="例如：我们是搭档，也是彼此最信任的人" value="${escapeHtml(agent.relationship||'')}"></div><input id="roleFileInput" type="file" accept=".json,.txt,.md,.png,text/plain,application/json,image/png" hidden><div class="form-group"><button type="button" class="btn ghost" id="importRoleButton">↥ 导入角色设定</button><div class="form-note">支持导入酒馆（SillyTavern）PNG / JSON 角色卡（V2/V3 自动映射字段），或 TXT / Markdown 世界书；文本 ≤300 KB、PNG ≤10 MB，文件仅在本机解析。</div></div><div class="modal-footer">${edit?'<button class="btn danger" id="deleteAgent">删除</button>':''}<span style="flex:1"></span><button class="btn ghost" id="cancel">取消</button><button class="btn primary" id="saveAgent">保存角色</button></div>`,()=>{$('#cancel').onclick=closeModal;$('#importRoleButton').onclick=()=>$('#roleFileInput').click();$('#roleFileInput').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;const isPng=/\.png$/i.test(file.name)||file.type==='image/png';const max=isPng?10*1024*1024:300*1024;if(file.size>max){toast(isPng?'PNG 角色卡不能超过 10 MB':'文件不能超过 300 KB');e.target.value='';return;}try{if(isPng){const card=parsePngCharaCard(await file.arrayBuffer());if(!card)throw new Error('no card data');fillFormFromCard(normalizeImportCard(card));toast('酒馆角色卡已导入');}else{const raw=(await file.text()).trim();if(!raw)throw new Error('文件为空');if(/\.json$/i.test(file.name)){fillFormFromCard(normalizeImportCard(JSON.parse(raw)));toast('角色卡已导入');}else{$('#initialScene').value=raw;toast('文本已导入到剧情初始环境');}}}catch(err){toast(isPng?'导入失败：PNG 中未找到有效的角色卡数据（需为酒馆 V2/V3 卡）':'导入失败：请使用有效的 JSON、TXT 或 Markdown 文件');}finally{e.target.value='';}};$('#saveAgent').onclick=()=>{const name=$('#agentName').value.trim();if(!name)return toast('请填写角色名称');const data={...agent,name,emoji:$('#agentEmoji').value.trim()||'✦',description:$('#agentDesc').value.trim(),baseDirective:$('#baseDirective').value.trim(),persona:$('#agentPersona').value.trim(),initialScene:$('#initialScene').value.trim(),relationship:$('#agentRelationship').value.trim(),userProfile:$('#userProfile').value.trim()};const wasBuiltin=isBuiltinId(data.id);if(edit&&state.agents.some(a=>a.id===data.id))state.agents=state.agents.map(a=>a.id===data.id?data:a);else{state.agents.push(data);state.activeId=data.id;}if(wasBuiltin){const hi=state.hiddenBuiltins.indexOf(data.id);if(hi>-1)state.hiddenBuiltins.splice(hi,1);}saveState();closeModal();render();toast(edit?(wasBuiltin?'已保存为我的角色（内置卡不受影响）':'角色已更新'):'角色已创建');};const del=$('#deleteAgent');if(del){del.onclick=()=>confirmDialog('删除角色',builtin?'将从你的列表中移除该内置角色，并删除其本地剧情记忆。可在「内置角色库」中随时重新加入。':'此操作会同时删除该角色的剧情记忆，无法恢复。','删除',()=>{state.agents=state.agents.filter(a=>a.id!==agent.id);if(!state.hiddenBuiltins.includes(agent.id))state.hiddenBuiltins.push(agent.id);delete state.chats[agent.id];delete state.play[agent.id];const list=allAgents();state.activeId=list[0]?.id||'';saveState();closeModal();render();toast('角色已删除');});}});
     }
     function confirmDialog(title,detail,ok,fn){openModal(`<h2>${title}</h2><p class="hint">${detail}</p><div class="modal-footer"><button class="btn ghost" id="cancel">取消</button><button class="btn danger" id="confirm">${ok}</button></div>`,()=>{$('#cancel').onclick=closeModal;$('#confirm').onclick=fn;});}
     // 内置角色库：从服务端 KV 下发的卡中挑选加入（已加入 / 曾移除的都可再添加）
