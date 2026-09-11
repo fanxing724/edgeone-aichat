@@ -246,25 +246,41 @@
     ];
 
     function loadDefaults(){
-      if(state.agents.length === 0){
-        state.agents = JSON.parse(JSON.stringify(defaults));
-        state.activeId = state.agents[0].id;
-      } else {
-        // 补全旧角色的缺失字段（兼容升级）
-        state.agents.forEach(a => {
-          const def = defaults.find(d => d.id === a.id);
-          if(def){
-            ['baseDirective','persona','userProfile','initialScene','relationship','description'].forEach(k => {
-              if(!a[k] && def[k]) a[k] = def[k];
+      // 一次性迁移：清理已废弃的旧版默认角色（雾城引路人 id:'default'）
+      const LEGACY_REMOVED_IDS = ['default'];
+      const beforeLen = state.agents.length;
+      state.agents = state.agents.filter(a => !LEGACY_REMOVED_IDS.includes(a.id));
+      if(state.agents.length !== beforeLen){
+        LEGACY_REMOVED_IDS.forEach(id => { delete state.chats[id]; delete state.play[id]; });
+      }
+      // 合并新预设：把 defaults 中用户尚未拥有的角色加入；已有同 id 则补全缺失字段
+      const existingIds = new Set(state.agents.map(a=>a.id));
+      defaults.forEach(d => {
+        if(!existingIds.has(d.id)){
+          state.agents.push(JSON.parse(JSON.stringify(d)));
+        } else {
+          const a = state.agents.find(x=>x.id===d.id);
+          if(a){
+            ['name','emoji','description','baseDirective','persona','userProfile','initialScene','relationship'].forEach(k=>{
+              if(!a[k] && d[k]) a[k] = d[k];
             });
           }
-        });
+        }
+      });
+      // 校正 activeId：若指向已删除/不存在的角色，回落到第一个可用角色
+      const validIds = state.agents.map(a=>a.id);
+      if(!state.activeId || !validIds.includes(state.activeId)){
+        state.activeId = validIds[0] || '';
+      }
+      if(!state.activeId && defaults.length){
+        state.agents = JSON.parse(JSON.stringify(defaults));
+        state.activeId = state.agents[0].id;
       }
     }
 
     function isBuiltinId(id){ return defaults.some(d => d.id === id); }
 
-    const state = {agents:[], activeId:'default', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'/api', model:'@makers/deepseek-v4-flash', builtinReady:null, builtinCards:[], hiddenBuiltins:[], modelList:[], thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, attachment:null, mode:'rp', workshopDrafts:[], shopActiveTpl:null, shopEditingId:null};
+    const state = {agents:[], activeId:'hatsune-miku', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'/api', model:'@makers/deepseek-v4-flash', builtinReady:null, builtinCards:[], hiddenBuiltins:[], modelList:[], thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, attachment:null, mode:'rp', workshopDrafts:[], shopActiveTpl:null, shopEditingId:null};
     // 网关内置免费模型（平台侧不提供 /models 接口，故在此维护；绑定自有厂商密钥后可用 provider/model 形式调用任意模型）
     const BUILTIN_MODELS = ['@makers/deepseek-v4-flash','@makers/deepseek-v4-pro','@makers/hy3','@makers/hy3-preview','@makers/minimax-m2.7','@makers/minimax-m3','@makers/kimi-k2.6'];
     const DEFAULT_MODEL = '@makers/deepseek-v4-flash';
