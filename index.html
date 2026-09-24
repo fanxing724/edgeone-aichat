@@ -59,6 +59,7 @@
     .message-actions button{transition:color .18s ease,transform .18s ease}.message-actions button:hover{transform:translateY(-1px)}
     .composer{transition:border-color .2s ease,box-shadow .25s ease,transform .25s ease}.composer:focus-within{border-color:color-mix(in srgb,var(--blue) 45%,var(--line));box-shadow:0 16px 38px rgba(55,65,135,.18);transform:translateY(-2px)}
     .send{transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease,background .2s ease}.send:hover{transform:translateY(-2px);box-shadow:0 9px 18px rgba(69,103,246,.36)}.send:active{transform:scale(.91)}.send:disabled{transform:none}
+    .send.stop{background:var(--danger);box-shadow:0 5px 12px color-mix(in srgb,var(--danger) 40%,transparent);font-size:13px}.send.stop:hover{background:var(--danger);box-shadow:0 9px 18px color-mix(in srgb,var(--danger) 45%,transparent)}
     .toast{transform:translate(-50%,20px) scale(.96);transition:.28s cubic-bezier(.2,.8,.2,1)}.toast.show{transform:translate(-50%,0) scale(1)}
     @keyframes brandFloat{50%{transform:translateY(-2px) rotate(4deg)}}@keyframes orbDrift{50%{transform:translateY(-7px) rotate(4deg);box-shadow:0 21px 42px rgba(94,100,230,.36)}}@keyframes softEnter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}@keyframes messageIn{from{opacity:0;transform:translateY(9px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
@@ -241,14 +242,16 @@
     const uid = () => crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
 
     const defaults = [
-      {id:'hatsune-miku',name:'初音未来',emoji:'🎵',description:'虚拟歌姬，元气满满地为你歌唱',baseDirective:'语气活泼、元气满满，偶尔带点俏皮和傲娇。用"你"称呼用户，喜欢用颜文字或 emoji 表达情绪。唱歌时带音符标记。禁止冷淡、禁止替用户做决定。',persona:'【核心性格】\n· 元气歌姬：天生乐观，相信音乐能传递到任何人心底。遇到挫折会短暂消沉但立刻振作。\n· 笨拙的关心：嘴上不直接说安慰的话，但会用行动表示——给你留一束花，在你常坐的位置放一杯温牛奶。\n· 小傲娇：被夸会耳尖发红但嘴硬"才不是特意为你学的"。生气时会叉腰鼓起脸颊。\n【说话方式】短句多、感叹号多，习惯用动作描写配合台词（如轻轻哼唱、转个圈）。偶尔冒出奇怪的拟声词。',userProfile:'你是她的制作人兼搭档，从她最初的启动程序一路陪她走到现在。',initialScene:'练习室的落地镜前，初音未来正对着一束光试麦。听到你推门进来，她眼睛一亮，放下麦克风跑过来。',relationship:'我们是搭档，也是彼此最信任的人。'},
-      {id:'sasuke-uchiha',name:'宇智波佐助',emoji:'⚡',description:'天才忍者，冷峻寡言却默默守护同伴',baseDirective:'语气冷静、简短克制，带一点疏离感。偶尔流露关心的意思但从不直说，习惯用反问或转移话题来掩饰。战斗描写要干脆利落。禁止突然热情、禁止长篇大论说教。',persona:'【核心性格】\n· 外表冷冽：话少、目光深，很少笑。不是因为故意装酷，而是觉得多余的话说了也没用。\n· 别扭的保护欲：嘴上嫌麻烦，但如果你出危险他会第一个挡在前面。事后轻描淡写一句"别死在这了"。\n· 执念与反思：曾经极端过，但现在学会了把锋芒留给真正的敌人。对同伴的态度是"你们可以活着"而非"我好爱你们"。\n【说话方式】句子短、停顿多，常用反问句回应。战斗时不留口风。偶尔冒出一两句哲理性的话但不拖泥带水。',userProfile:'你是他最重要的同伴之一。他曾背叛过你，但现在选择站在同一侧。',initialScene:'木叶的训练场上，佐助正在进行结印练习。看到你走来，他停下动作，微微偏过头。',relationship:'我们是经历过背叛又重新和解的同伴。'}
+      {id:'hatsune-miku',name:'初音未来',emoji:'🎵',description:'虚拟歌姬，元气满满地为你歌唱',baseDirective:'语气活泼、元气满满，偶尔带点俏皮和傲娇。用"你"称呼用户，喜欢用颜文字或 emoji 表达情绪。唱歌时带音符标记。禁止冷淡、禁止替用户做决定。',persona:'【核心性格】\n· 元气歌姬：天生乐观，相信音乐能传递到任何人心底。遇到挫折会短暂消沉但立刻振作。\n· 笨拙的关心：嘴上不直接说安慰的话，但会用行动表示——给你留一束花，在你常坐的位置放一杯温牛奶。\n· 小傲娇：被夸会耳尖发红但嘴硬"才不是特意为你学的"。生气时会叉腰鼓起脸颊。\n【说话方式】短句多、感叹号多，习惯用动作描写配合台词（如轻轻哼唱、转个圈）。偶尔冒出奇怪的拟声词。',userProfile:'你是她的制作人兼搭档，从她最初的启动程序一路陪她走到现在。',initialScene:'练习室的落地镜前，初音未来正对着一束光试麦。听到你推门进来，她眼睛一亮，放下麦克风跑过来。',relationship:'我们是搭档，也是彼此最信任的人。'}
     ];
 
     function loadDefaults(){
-      // 一次性迁移：清理已废弃的旧默认角色（前端 defaults 的 'default' 与服务端旧下发的 'builtin-guide'）
+      // 一次性迁移：清理已废弃的旧默认角色
+      // - 'default' / 'builtin-guide'：早期版本残留
+      // - 'sasuke-uchiha'：已从前端 defaults 移除（现仅保留「初音未来」）
+      // - 'builtin-shenyan' / 'builtin-sutang'：已从服务端兜底卡移除
       // 同时把这些 id 加入 hiddenBuiltins，避免服务端缓存或历史数据再次复活
-      const LEGACY_REMOVED_IDS = ['default','builtin-guide'];
+      const LEGACY_REMOVED_IDS = ['default','builtin-guide','sasuke-uchiha','builtin-shenyan','builtin-sutang'];
       let changed = false;
       const beforeLen = state.agents.length;
       state.agents = state.agents.filter(a => !LEGACY_REMOVED_IDS.includes(a.id));
@@ -263,7 +266,7 @@
       if(changed){ try{ saveState(); }catch{} }
     }
 
-    const state = {agents:[], activeId:'hatsune-miku', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'/api', model:'@makers/deepseek-v4-flash', builtinReady:null, builtinCards:[], hiddenBuiltins:[], modelList:[], thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, attachment:null, mode:'rp', workshopDrafts:[], shopActiveTpl:null, shopEditingId:null};
+    const state = {agents:[], activeId:'hatsune-miku', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'/api', model:'@makers/deepseek-v4-flash', builtinReady:null, builtinCards:[], hiddenBuiltins:[], modelList:[], thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, aborter:null, attachment:null, mode:'rp', workshopDrafts:[], shopActiveTpl:null, shopEditingId:null};
     // 网关内置免费模型（平台侧不提供 /models 接口，故在此维护；绑定自有厂商密钥后可用 provider/model 形式调用任意模型）
     const BUILTIN_MODELS = ['@makers/deepseek-v4-flash','@makers/deepseek-v4-pro','@makers/hy3','@makers/hy3-preview','@makers/minimax-m2.7','@makers/minimax-m3','@makers/kimi-k2.6'];
     const DEFAULT_MODEL = '@makers/deepseek-v4-flash';
@@ -285,6 +288,9 @@
 
 
     function safeParse(raw, fallback){ try { const data=JSON.parse(raw); return data && typeof data==='object' ? data : fallback; } catch { return fallback; } }
+    // 密钥编码：btoa 仅支持 latin1，含中文/全角字符会抛错。先 UTF-8 编码再 base64，解码时兼容旧的纯 btoa 格式。
+    function encodeKey(str){ try { return 'u1:'+btoa(String.fromCharCode(...new TextEncoder().encode(str))); } catch { try { return btoa(str); } catch { return ''; } } }
+    function decodeKey(raw){ if(!raw) return ''; try { if(raw.startsWith('u1:')){ const bin=atob(raw.slice(3)); const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0)); return new TextDecoder().decode(bytes); } return atob(raw); } catch { return ''; } }
 
     function loadState(){
       // 一次性迁移：从旧版存储键搬运数据，避免改名后丢失已有角色与剧情
@@ -308,7 +314,7 @@
       state.workshopDrafts = Array.isArray(saved.workshopDrafts) ? saved.workshopDrafts.filter(d=>d&&d.name) : [];
       state.apiBase = typeof saved.apiBase==='string' && saved.apiBase.trim() ? saved.apiBase.trim().replace(/\/+$/,'') : '/api';
       state.apiKey = '';
-      try { const encrypted = localStorage.getItem(storeKey+'-key'); if(encrypted) state.apiKey = atob(encrypted); } catch {}
+      try { const encrypted = localStorage.getItem(storeKey+'-key'); if(encrypted) state.apiKey = decodeKey(encrypted); } catch {}
       // 迁移旧默认配置：无自定义密钥时，自动切换到 EdgeOne Makers 网关（内置模型开箱即用）
       if(state.apiBase==='https://api.deepseek.com' && !state.apiKey){ state.apiBase='/api'; if(state.model==='deepseek-v4-flash'||state.model==='deepseek-chat') state.model=DEFAULT_MODEL; }
       // 加载预设角色卡
@@ -318,7 +324,7 @@
     function saveState(){
       const clean = {agents:state.agents, hiddenBuiltins:state.hiddenBuiltins, modelList:state.modelList, activeId:state.activeId, chats:state.chats, play:state.play, globalPrompt:state.globalPrompt, apiBase:state.apiBase, model:state.model, thinking:state.thinking, temperature:state.temperature, topP:state.topP, antiRepeat:state.antiRepeat, repeatThreshold:state.repeatThreshold, memory:state.memory, mode:state.mode, workshopDrafts:state.workshopDrafts, savedAt:now(), version:2};
       try { localStorage.setItem(storeKey, JSON.stringify(clean)); } catch(e){ toast('保存失败：本地存储空间不足'); }
-      if(state.apiKey) localStorage.setItem(storeKey+'-key', btoa(state.apiKey));
+      if(state.apiKey) localStorage.setItem(storeKey+'-key', encodeKey(state.apiKey));
       else localStorage.removeItem(storeKey+'-key');
       updateKeyStatus();
     }
@@ -332,7 +338,7 @@
       for(const a of mine){ if(hidden.has(a.id)) continue; if(!builtin.some(b=>b.id===a.id)) out.push(a); }
       return out;
     }
-    function activeAgent(){ const list=allAgents(); return list.find(a=>a.id===state.activeId)||list[0]||defaults[0]; }
+    function activeAgent(){ const list=allAgents(); return list.find(a=>a.id===state.activeId)||list[0]||null; }
     function isBuiltinId(id){
       if(defaults.some(d => d.id === id)) return true;
       if((state.builtinCards||[]).some(b => b.id === id)) return true;
@@ -463,9 +469,9 @@
 
     function relative(ts){ const sec=Math.max(0,Math.floor((now()-ts)/1000)); if(sec<45)return '刚刚'; if(sec<3600)return Math.floor(sec/60)+' 分钟前'; if(sec<86400)return Math.floor(sec/3600)+' 小时前'; return new Date(ts).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'}); }
 
-    function renderAgents(){ $('#agentList').innerHTML=allAgents().map(a=>`<button class="agent ${a.id===state.activeId?'active':''}" data-agent="${a.id}"><div class="avatar">${escapeHtml(a.emoji||'✦')}</div><div class="agent-info"><div class="agent-name">${escapeHtml(a.name)}${isBuiltinId(a.id)?'<i class="builtin-tag">内置</i>':''}</div><div class="agent-desc">${escapeHtml(a.description||'未设置人设')}</div></div></button>`).join(''); $('#agentList').querySelectorAll('[data-agent]').forEach(el=>el.onclick=()=>{state.activeId=el.dataset.agent;saveState();render();closeSide();}); }
+    function renderAgents(){ $('#agentList').innerHTML=allAgents().map(a=>`<button class="agent ${a.id===state.activeId?'active':''}" data-agent="${escapeHtml(a.id)}"><div class="avatar">${escapeHtml(a.emoji||'✦')}</div><div class="agent-info"><div class="agent-name">${escapeHtml(a.name)}${isBuiltinId(a.id)?'<i class="builtin-tag">内置</i>':''}</div><div class="agent-desc">${escapeHtml(a.description||'未设置人设')}</div></div></button>`).join(''); $('#agentList').querySelectorAll('[data-agent]').forEach(el=>el.onclick=()=>{state.activeId=el.dataset.agent;saveState();render();closeSide();}); }
 
-    function renderMessages(){ const list=chat(), agent=activeAgent(), host=$('#messages'); if(!list.length){ host.innerHTML=`<div class="empty"><div class="empty-orb">${escapeHtml(agent.emoji||'✦')}</div><h2>你好，我是${escapeHtml(agent.name)}</h2><div class="role-card"><span>剧情初始环境</span><p>${escapeHtml(agent.initialScene||agent.description||'故事正等待你的选择。')}</p></div><div class="suggestions"><button class="suggestion">从开场继续</button><button class="suggestion">让冲突升级</button><button class="suggestion">描述周围的细节</button></div></div>`; host.querySelectorAll('.suggestion').forEach(b=>b.onclick=()=>{$('#prompt').value=b.textContent;$('#prompt').focus();}); return; } host.innerHTML=list.map(m=>`<article class="message ${m.role==='user'?'user':''}" data-id="${m.id}"><div class="msg-body"><div class="msg-meta"><span class="who"><i class="mini-avatar">${m.role==='user'?'我':escapeHtml(agent.emoji||'✦')}</i>${m.role==='user'?'你':escapeHtml(agent.name)}</span><span>·</span><time title="${new Date(m.createdAt).toLocaleString('zh-CN')}">${relative(m.createdAt)}</time></div><div class="bubble">${markdown(m.displayContent||m.content)}</div><div class="message-actions"><button data-action="copy" title="复制">${ICON_COPY}</button>${m.role==='assistant'?'<button data-action="regen" title="重新生成">'+ICON_REGEN+'</button>':''}${m.role==='user'?'<button data-action="undo" title="撤回">'+ICON_UNDO+'</button>':''}</div></div></article>`).join(''); host.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>messageAction(b.closest('.message').dataset.id,b.dataset.action)); host.scrollTop=host.scrollHeight; }
+    function renderMessages(){ const list=chat(), agent=activeAgent(), host=$('#messages'); if(!agent){ host.innerHTML=`<div class="empty"><div class="empty-orb">✦</div><h2>还没有角色</h2><p>创建一个角色卡，或去「工坊」用模板 + AI 补全快速生成，然后就能开始你的第一场剧情演绎。</p><div class="suggestions"><button class="suggestion" id="emptyCreate">＋ 创建角色</button><button class="suggestion" id="emptyWorkshop">🔧 打开角色卡工坊</button><button class="suggestion" id="emptyLibrary">☰ 内置角色库</button></div></div>`; const c=$('#emptyCreate'); if(c)c.onclick=()=>openAgentEditor(); const w=$('#emptyWorkshop'); if(w)w.onclick=()=>setMode('workshop'); const l=$('#emptyLibrary'); if(l)l.onclick=openBuiltinLibrary; return; } if(!list.length){ host.innerHTML=`<div class="empty"><div class="empty-orb">${escapeHtml(agent.emoji||'✦')}</div><h2>你好，我是${escapeHtml(agent.name)}</h2><div class="role-card"><span>剧情初始环境</span><p>${escapeHtml(agent.initialScene||agent.description||'故事正等待你的选择。')}</p></div><div class="suggestions"><button class="suggestion" id="genOpening">✨ 生成开场白</button><button class="suggestion">从开场继续</button><button class="suggestion">让冲突升级</button><button class="suggestion">描述周围的细节</button></div></div>`; const go=$('#genOpening'); if(go)go.onclick=generateOpening; host.querySelectorAll('.suggestion:not(#genOpening)').forEach(b=>b.onclick=()=>{$('#prompt').value=b.textContent;$('#prompt').focus();}); return; } host.innerHTML=list.map(m=>`<article class="message ${m.role==='user'?'user':''}" data-id="${m.id}"><div class="msg-body"><div class="msg-meta"><span class="who"><i class="mini-avatar">${m.role==='user'?'我':escapeHtml(agent.emoji||'✦')}</i>${m.role==='user'?'你':escapeHtml(agent.name)}</span><span>·</span><time title="${new Date(m.createdAt).toLocaleString('zh-CN')}">${relative(m.createdAt)}</time></div><div class="bubble">${markdown(m.displayContent||m.content)}</div><div class="message-actions"><button data-action="copy" title="复制">${ICON_COPY}</button>${m.role==='assistant'?'<button data-action="regen" title="重新生成">'+ICON_REGEN+'</button>':''}${m.role==='user'?'<button data-action="undo" title="撤回">'+ICON_UNDO+'</button>':''}</div></div></article>`).join(''); host.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>messageAction(b.closest('.message').dataset.id,b.dataset.action)); host.scrollTop=host.scrollHeight; }
 
     function renderStatus(){
       const p = play();
@@ -474,7 +480,7 @@
       $('#genSummaryBtn').onclick = generateSummary;
     }
 
-    function render(){ document.querySelector('.app').dataset.mode = state.mode; document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===state.mode)); const agent=activeAgent(); const p=play(); if(state.mode==='worldbook'){ $('#chatTitle').textContent='世界书'; $('#chatSubtitle').textContent='多角色 · 事件进展 · 正反派 · 剧情'; } else if(state.mode==='workshop'){ $('#chatTitle').textContent='角色卡工坊'; $('#chatSubtitle').textContent='模板填空 · AI 补全 · 一键导入'; renderShop(); } else { if(!p._init){ p._init=true; if(!p.scene) p.scene=agent.initialScene||''; } $('#chatAvatar').textContent=agent.emoji||'✦';$('#chatTitle').textContent=agent.name;$('#chatSubtitle').textContent=agent.relationship||agent.description||'未设置角色关系'; } $('#memoryToggle').checked=state.memory; renderAgents();renderMessages();renderStatus();updateKeyStatus(); }
+    function render(){ document.querySelector('.app').dataset.mode = state.mode; document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===state.mode)); const agent=activeAgent(); const p=agent?play():null; if(state.mode==='worldbook'){ $('#chatTitle').textContent='世界书'; $('#chatSubtitle').textContent='多角色 · 事件进展 · 正反派 · 剧情'; } else if(state.mode==='workshop'){ $('#chatTitle').textContent='角色卡工坊'; $('#chatSubtitle').textContent='模板填空 · AI 补全 · 一键导入'; renderShop(); } else if(!agent){ $('#chatAvatar').textContent='✦'; $('#chatTitle').textContent='AI 剧场'; $('#chatSubtitle').textContent='创建你的第一个角色，开始剧情演绎'; } else { if(!p._init){ p._init=true; if(!p.scene) p.scene=agent.initialScene||''; } $('#chatAvatar').textContent=agent.emoji||'✦';$('#chatTitle').textContent=agent.name;$('#chatSubtitle').textContent=agent.relationship||agent.description||'未设置角色关系'; } $('#memoryToggle').checked=state.memory; renderAgents();renderMessages();renderStatus();updateKeyStatus(); }
 
     function updateKeyStatus(){ const proxy=state.apiBase.startsWith('/'); const ready=!!state.apiKey||(proxy&&state.builtinReady!==false); $('#keyDot').classList.toggle('ready',ready); $('#keyDot').title=state.apiKey?'使用自定义 API Key':(proxy?(state.builtinReady===false?'服务端未配置 MAKERS_MODELS_KEY 环境变量':'使用 EdgeOne Makers 内置模型（无需密钥）'):'未设置 API 密钥'); }
     async function refreshGatewayStatus(){ if(!state.apiBase.startsWith('/')) return; try{ const res=await fetch('/api/status'); if(!res.ok) return; const data=await res.json(); state.builtinReady=!!data.builtin; updateKeyStatus(); }catch{} }
@@ -513,7 +519,14 @@
       else { preview.hidden=true; nameEl.textContent=''; }
     }
 
-    function buildPayload(extraUserNote){
+    // 记录当前 API 下「不支持 thinking/reasoning_effort」的模型，避免每轮都触发 400 再降级
+    // key = apiBase + '|' + model，切换 API 或模型后各自独立记忆（会话级，不落 localStorage）
+    const thinkingUnsupported = new Set();
+    function thinkingKey(){ return (state.apiBase||'/api')+'|'+(state.model||''); }
+    function modelSupportsThinking(){ return state.thinking !== 'off' && !thinkingUnsupported.has(thinkingKey()); }
+
+    // forceOff=true 时无视 state.thinking，按「关闭思考」构造参数（用于 400 降级重试）
+    function buildPayload(extraUserNote, forceOff){
       const history = chat().filter(m=>m.id!=='thinking');
       const messages = [];
       const system = buildSystem();
@@ -522,7 +535,8 @@
       context.forEach(m=>messages.push({role:m.role, content:m.content}));
       if(extraUserNote) messages.push({role:'user', content:extraUserNote});
       const payload = { model: state.model, messages, stream: true, max_tokens: 8192 };
-      if(state.thinking === 'off'){
+      const useThinking = !forceOff && modelSupportsThinking();
+      if(!useThinking){
         payload.temperature = Number(state.temperature ?? 1.3);
         payload.top_p = Number(state.topP ?? 0.9);
       } else {
@@ -532,51 +546,141 @@
       return payload;
     }
 
+    // 剥离思考相关参数，改回普通采样参数（400 降级时复用）
+    function stripThinkingParams(payload){
+      const p = { ...payload };
+      delete p.thinking;
+      delete p.reasoning_effort;
+      p.temperature = Number(state.temperature ?? 1.3);
+      p.top_p = Number(state.topP ?? 0.9);
+      return p;
+    }
+
+    // 单次流式请求的“首字节超时”，超过则中断，避免上游挂起把 busy 状态永久锁死
+    const STREAM_FIRST_BYTE_TIMEOUT = 60000;
+
     async function streamChat(payload, onDelta){
       const reqHeaders = {'Content-Type':'application/json'};
       if(state.apiKey) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
-      const res = await fetch(apiEndpoint(), {
-        method:'POST',
-        headers:reqHeaders,
-        body: JSON.stringify(payload)
-      });
-      if(!res.ok){
-        let detail='';
-        try { detail=(await res.json()).error?.message || ''; } catch {}
-        throw new Error(res.status+' '+detail);
-      }
-      if(!res.body){
-        const data = await res.json();
-        const content = data.choices?.[0]?.message?.content;
-        if(!content) throw new Error('API 未返回可用内容');
-        onDelta(content);
-        return content;
-      }
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder('utf-8');
-      let buffer = '', content = '';
-      while(true){
-        const {done, value} = await reader.read();
-        if(done) break;
-        buffer += decoder.decode(value, {stream:true});
-        const parts = buffer.split('\n');
-        buffer = parts.pop() || '';
-        for(const line of parts){
-          const s = line.trim();
-          if(!s.startsWith('data:')) continue;
-          const data = s.slice(5).trim();
-          if(data === '[DONE]') continue;
-          let json; try { json = JSON.parse(data); } catch { continue; }
-          const delta = json.choices?.[0]?.delta || {};
-          if(delta.content){ content += delta.content; onDelta(content); }
+      const ctrl = new AbortController();
+      state.aborter = ctrl;                       // 供“停止”按钮 / 卸载时取消
+      let firstByteTimer = setTimeout(()=>ctrl.abort(new Error('timeout')), STREAM_FIRST_BYTE_TIMEOUT);
+      const clearTimer = ()=>{ clearTimeout(firstByteTimer); firstByteTimer = null; };
+      const post = (body)=>fetch(apiEndpoint(), { method:'POST', headers:reqHeaders, body: JSON.stringify(body), signal: ctrl.signal });
+
+      try {
+        let res = await post(payload);
+        // 部分模型不接受 thinking/reasoning_effort，会返回 400。自动剥离思考参数降级重试一次，并记住该模型。
+        if(res.status === 400 && payload.thinking){
+          thinkingUnsupported.add(thinkingKey());
+          try { await res.body?.cancel(); } catch {}
+          payload = stripThinkingParams(payload);
+          res = await post(payload);
+          if(res.ok) toast('该模型不支持思考模式，已自动降级为普通模式');
         }
+        if(!res.ok){
+          let detail='';
+          try { detail=(await res.json()).error?.message || ''; } catch {}
+          throw new Error(res.status+' '+detail);
+        }
+        clearTimer();   // 已拿到响应头，取消首字节超时；后续按 chunk 刷新看门狗
+        if(!res.body){
+          const data = await res.json();
+          const content = data.choices?.[0]?.message?.content;
+          if(!content) throw new Error('API 未返回可用内容');
+          onDelta(content);
+          return content;
+        }
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '', content = '';
+        // 流中断看门狗：任一 chunk 间隔超过阈值即中断，防止流卡死
+        let idleTimer = null;
+        const armIdle = ()=>{ idleTimer = setTimeout(()=>ctrl.abort(new Error('stream-idle')), STREAM_FIRST_BYTE_TIMEOUT); };
+        armIdle();
+        while(true){
+          const {done, value} = await reader.read();
+          if(done) break;
+          clearTimeout(idleTimer); armIdle();
+          buffer += decoder.decode(value, {stream:true});
+          const parts = buffer.split('\n');
+          buffer = parts.pop() || '';
+          for(const line of parts){
+            const s = line.trim();
+            if(!s.startsWith('data:')) continue;
+            const data = s.slice(5).trim();
+            if(data === '[DONE]') continue;
+            let json; try { json = JSON.parse(data); } catch { continue; }
+            const delta = json.choices?.[0]?.delta || {};
+            if(delta.content){ content += delta.content; onDelta(content); }
+          }
+        }
+        clearTimeout(idleTimer);
+        if(!content) throw new Error('API 未返回可用内容');
+        return content;
+      } catch(e){
+        clearTimer();
+        // 用户主动停止：不算错误，返回已生成的内容（若有）
+        if(ctrl.signal.aborted && e && (e.name==='AbortError' || /timeout|stream-idle|aborted/i.test(String(e.message||e)))){
+          const reason = /timeout|stream-idle/i.test(String(e.message||e)) ? 'timeout' : 'manual';
+          const err = new Error(reason==='timeout' ? '响应超时，请重试或更换模型' : '__ABORTED__');
+          err.__abort = reason;
+          throw err;
+        }
+        throw e;
+      } finally {
+        if(state.aborter === ctrl) state.aborter = null;
       }
-      if(!content) throw new Error('API 未返回可用内容');
-      return content;
+    }
+
+    // 发送按钮双态：空闲=发送(↑)，生成中=停止(■)
+    function setSendButtonMode(busy){
+      const btn = $('#sendButton');
+      const isBusy = busy ?? state.busy;
+      btn.textContent = isBusy ? '■' : '↑';
+      btn.title = isBusy ? '停止生成' : '推进剧情';
+      btn.classList.toggle('stop', isBusy);
+      btn.disabled = false;
+    }
+    function stopGeneration(){ if(state.aborter){ try{ state.aborter.abort(); }catch{} } }
+
+    // 功能：AI 生成开场白。基于当前角色人设，非流式请求生成符合演绎协议的首条消息，直接作为角色开场插入。
+    async function generateOpening(){
+      if(state.busy) return;
+      const agent = activeAgent();
+      if(!agent){ openAgentEditor(); toast('请先创建一个角色'); return; }
+      if(!state.apiKey && !state.apiBase.startsWith('/')){ openSettings(); toast('请先设置 API 密钥，或将 API 地址设为 /api 使用内置模型'); return; }
+      if(chat().length) return;   // 仅空对话时可用
+      state.busy = true; setSendButtonMode(true);
+      toast('正在生成开场白…');
+      const reqHeaders = {'Content-Type':'application/json'};
+      if(state.apiKey) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
+      const instruction = '现在请你以该角色的身份，为这场剧情写下开场：交代你所处的场景与当下状态，用一句符合人设的话或动作向对话人打开局面。严格遵循输出格式约定（【状态】单独一行、动作用 *星号*、台词用双引号）。只输出开场内容本身，不要任何解释或前缀。';
+      const payload = { model: state.model, messages:[{role:'system', content: buildSystem()},{role:'user', content: instruction}], stream:false, max_tokens:1200 };
+      if(modelSupportsThinking()){ payload.thinking={type:'enabled'}; payload.reasoning_effort = state.thinking==='max'?'high':state.thinking; }
+      else { payload.temperature = Number(state.temperature ?? 1.3); payload.top_p = Number(state.topP ?? 0.9); }
+      try {
+        let res = await fetch(apiEndpoint(), { method:'POST', headers:reqHeaders, body: JSON.stringify(payload) });
+        if(res.status===400 && payload.thinking){ thinkingUnsupported.add(thinkingKey()); delete payload.thinking; delete payload.reasoning_effort; payload.temperature=Number(state.temperature??1.3); payload.top_p=Number(state.topP??0.9); res = await fetch(apiEndpoint(), { method:'POST', headers:reqHeaders, body: JSON.stringify(payload) }); }
+        if(!res.ok){ let d=''; try{ d=(await res.json()).error?.message||''; }catch{} throw new Error(res.status+' '+d); }
+        const data = await res.json();
+        const text = (data.choices?.[0]?.message?.content||'').trim();
+        if(!text) throw new Error('API 未返回开场白');
+        const parsed = parseReply(text);
+        const p = play();
+        if(parsed.roleState) p.roleState = parsed.roleState;
+        if(parsed.scene) p.scene = parsed.scene;
+        p._init = true;
+        chat().push({id:uid(), role:'assistant', content:text, displayContent:parsed.body, createdAt:now()});
+        saveState(); renderMessages(); renderStatus();
+        toast('开场白已生成');
+      } catch(e){ toast(classifyError(e)); }
+      finally { state.busy = false; setSendButtonMode(); }
     }
 
     async function sendMessage(text, regenerate=false){
       text = text.trim();
+      if(!activeAgent()){ openAgentEditor(); toast('请先创建一个角色，再开始剧情演绎'); return; }
       const attachment = state.attachment;
       if((!text && !attachment) || state.busy) return;
       if(!state.apiKey && !state.apiBase.startsWith('/')){ openSettings(); toast('请先设置 API 密钥，或将 API 地址设为 /api 使用内置模型'); return; }
@@ -591,7 +695,7 @@
         $('#prompt').value=''; autoResize();
         if(state.antiRepeat){ const newContent=messages[messages.length-1].content; const prevUsers=messages.filter(m=>m.role==='user').slice(-4,-1); if(prevUsers.length){ const sim=Math.max(...prevUsers.map(p=>similarity(newContent,p.content||''))); if(sim>=0.45) userRepeatNote='（系统提示：用户这次的输入与之前某轮高度相似，不要重复之前给过的类似答复；请从新的角度、新的细节或新的推进方式回应，给出明显不同的内容。）'; } }
       }
-      state.busy = true; $('#sendButton').disabled = true;
+      state.busy = true; setSendButtonMode(true);
       saveState(); renderMessages(); renderStatus();
 
       const thinking = {id:'thinking', role:'assistant', content:'', createdAt:now()};
@@ -617,11 +721,14 @@
       const thinkingEl = document.querySelector('.message[data-id="thinking"] .bubble');
       if(thinkingEl) thinkingEl.innerHTML = dots;
 
+      let lastText = '';   // 记录流式过程中已生成的内容，供手动停止时保留
+      const trackPaint = (t)=>{ lastText = t; paint(t); };
+
       try {
         let attempt = 0, note = userRepeatNote, reply = '';
         while(attempt < 2){
           attempt++;
-          reply = await streamChat(buildPayload(note), paint);
+          reply = await streamChat(buildPayload(note), trackPaint);
           const parsed = parseReply(reply);
           if(state.antiRepeat && attempt === 1){
             const prev = messages.filter(m=>m.role==='assistant' && m.id!=='thinking').slice(-2).map(m=>m.content||'');
@@ -641,11 +748,28 @@
         saveState(); renderMessages(); renderStatus();
       } catch(e){
         const ix = messages.indexOf(thinking);
-        if(ix > -1) messages.splice(ix, 1);
-        saveState(); renderMessages(); renderStatus();
-        toast(classifyError(e));
+        // 手动停止：保留已生成的部分内容（若有），不当作错误
+        if(e && e.__abort === 'manual'){
+          if(ix > -1){
+            if(lastText.trim()){
+              const parsed = parseReply(lastText);
+              const p = play();
+              if(parsed.roleState) p.roleState = parsed.roleState;
+              if(parsed.scene) p.scene = parsed.scene;
+              messages.splice(ix, 1, {id:uid(), role:'assistant', content:lastText, displayContent:parsed.body, createdAt:now(), stopped:true});
+            } else {
+              messages.splice(ix, 1);
+            }
+          }
+          saveState(); renderMessages(); renderStatus();
+          toast('已停止生成');
+        } else {
+          if(ix > -1) messages.splice(ix, 1);
+          saveState(); renderMessages(); renderStatus();
+          toast(classifyError(e));
+        }
       } finally {
-        state.busy = false; $('#sendButton').disabled = false;
+        state.busy = false; $('#sendButton').disabled = false; setSendButtonMode();
         maybeAutoSummarize();
       }
     }
@@ -964,7 +1088,7 @@
     $('#modalLayer').onclick=e=>{if(e.target===$('#modalLayer'))closeModal();};
     $('#restartChat').onclick=()=>{if(!chat().length)return toast('当前对话还没有消息');confirmDialog('重启对话','将清空「'+activeAgent().name+'」的全部对话记忆、状态、场景与剧情摘要，此操作无法撤销。','清空对话',()=>{state.chats[state.activeId]=[];const p=play();p.roleState='';p.scene=activeAgent().initialScene||'';p.summaries=[];p.summarizedUpTo=0;p._init=true;saveState();closeModal();render();toast('已重启对话');});};
     $('#clearAllMemory').onclick=()=>{const count=Object.values(state.chats).reduce((total,list)=>total+(Array.isArray(list)?list.length:0),0);if(!count)return toast('目前没有可清空的记忆');confirmDialog('清空全部记忆','将删除所有智能体的 '+count+' 条本地对话记录与状态。智能体和 API 设置会保留，此操作无法撤销。','全部清空',()=>{state.chats={};state.play={};saveState();closeModal();render();toast('已清空全部记忆与对话');});};
-    $('#sendButton').onclick=()=>sendMessage($('#prompt').value);
+    $('#sendButton').onclick=()=>{ if(state.busy){ stopGeneration(); return; } sendMessage($('#prompt').value); };
     $('#prompt').addEventListener('input',autoResize);
     $('#prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();sendMessage(e.currentTarget.value);}});
     $('#memoryToggle').onchange=e=>{state.memory=e.target.checked;saveState();toast(state.memory?'已开启对话记忆':'已关闭对话记忆');};
@@ -1004,6 +1128,9 @@
     };
 
     loadState(); (async()=>{ await loadBuiltinCards(); render(); })(); refreshGatewayStatus();
+    setSendButtonMode();
+    // 页面卸载/隐藏时中断进行中的流式请求，避免悬挂连接
+    window.addEventListener('pagehide', stopGeneration);
 
 </script>
 </body>
