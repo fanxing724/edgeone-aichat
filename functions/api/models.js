@@ -43,10 +43,17 @@ export async function onRequest(context) {
 
   const auth = request.headers.get('authorization') || '';
   const headerKey = /^bearer\s+/i.test(auth) ? auth.replace(/^bearer\s+/i, '').trim() : '';
-  const apiKey = (typeof body.key === 'string' && body.key.trim()) || headerKey || platformKey(env);
+  const userKey = (typeof body.key === 'string' && body.key.trim()) || headerKey;
+
+  // 安全：平台密钥只允许发往默认网关，绝不发往用户指定的任意 base（防止 SSRF / 平台密钥泄露）。
+  // 自定义 base 必须由调用方自带密钥，否则一律拒绝。
+  const isDefaultBase = base === DEFAULT_BASE;
+  const apiKey = userKey || (isDefaultBase ? platformKey(env) : '');
 
   if (!apiKey) {
-    return json({ error: { message: '未配置 API Key，无法获取模型列表' } }, 401);
+    return json({ error: { message: isDefaultBase
+      ? '未配置 API Key，无法获取模型列表'
+      : '使用自定义 API 地址时，请在设置中填写你自己的 API Key（平台密钥不会发往第三方地址）' } }, 401);
   }
 
   let upstream;
