@@ -67,22 +67,33 @@
     .attachment-preview{display:flex;align-items:center;gap:8px;margin:2px 2px 7px;padding:7px 9px;border-radius:11px;background:color-mix(in srgb,var(--blue) 10%,transparent);color:var(--blue);font-size:12px;font-weight:600;max-width:100%}.attachment-preview[hidden]{display:none}.attachment-preview::before{content:'📄'}.attachment-preview span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.attachment-preview button,.attach-file{border:0;background:transparent;color:var(--muted);cursor:pointer}.attachment-preview button{width:22px;height:22px;border-radius:50%;font-size:17px;line-height:1}.attachment-preview button:hover{background:rgba(130,140,180,.15);color:var(--danger)}.attach-file{width:28px;height:28px;border-radius:9px;font-size:22px;line-height:1;transition:background .2s ease,color .2s ease}.attach-file:hover{background:rgba(130,140,180,.14);color:var(--blue)}.composer-bottom .memory-switch{margin-right:auto}
 
     /* ===== 剧情状态栏 & 演绎排版 ===== */
-    .status-bar{display:flex;gap:10px;align-items:stretch;padding:14px max(24px,calc((100% - 900px)/2)) 2px;flex-wrap:wrap}
-    .status-bar .chip{flex:1;min-width:180px;border:1px solid var(--line);border-radius:14px;background:var(--panel);backdrop-filter:blur(14px);padding:10px 13px}
-    .status-bar .chip .tag{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.06em;text-transform:uppercase}
+    .status-bar{display:flex;gap:10px;align-items:stretch;padding:14px max(24px,calc((100% - 900px)/2)) 2px;flex-wrap:wrap;transition:gap .22s ease,padding .22s ease}
+    .status-bar .chip{flex:1 1 auto;min-width:180px;border:1px solid var(--line);border-radius:14px;background:var(--panel);backdrop-filter:blur(14px);padding:10px 13px;transition:padding .22s ease}
+    .status-bar .chip .tag{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:11px;font-weight:700;color:var(--blue);letter-spacing:.06em;text-transform:uppercase}
     .status-bar .chip .tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--blue)}
     .status-bar .chip.scene .tag::before{background:var(--green)}
     .status-bar .chip .val{margin-top:5px;font-size:13px;line-height:1.6;color:var(--text);white-space:pre-wrap;word-break:break-word}
     .status-bar .chip .val:empty::before{content:'（尚未设定）';color:var(--muted);opacity:.7}
-    .status-bar .bar-btns{display:flex;flex-direction:column;gap:4px;align-items:stretch;flex:none;align-self:center}
+    /* 折叠态：只留标签行与折叠/展开按钮，正文收成单行，降低占用的聊天高度 */
+    .status-bar .chip.collapsed{padding:7px 11px}
+    .status-bar .chip-toggle{border:0;background:transparent;color:var(--blue);border-radius:8px;padding:2px 5px;display:grid;place-items:center;transition:background .18s ease}
+    .status-bar .chip-toggle:hover{background:color-mix(in srgb,var(--blue) 13%,transparent)}
+    .status-bar .chip-toggle svg{width:15px;height:15px;transition:transform .22s ease}
+    .status-bar .chip.collapsed .chip-toggle svg{transform:rotate(-90deg)}
+    .status-bar .bar-btns{display:flex;flex-direction:column;gap:4px;align-items:stretch;flex:none;align-self:center;margin-left:auto}
     .status-bar .bar-btn{height:30px;border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:10px;padding:0 10px;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap}
     .status-bar .bar-btn:hover{color:var(--text);background:var(--solid)}
+    .status-bar.collapsed{gap:8px;padding-top:9px;padding-bottom:0}
+    .status-bar.collapsed .chip{flex:0 0 auto;min-width:0;padding:6px 11px}
+    .status-bar.collapsed .chip .tag{height:20px}
+    .status-bar.collapsed .bar-btns{flex-direction:row;align-items:center;gap:6px}
+    .status-bar.collapsed .chip .val{display:none}
     .bubble .dialogue{color:color-mix(in srgb,var(--blue) 78%,var(--text));font-weight:650}
     .bubble em{font-style:italic;color:var(--muted)}
     .bubble .status-inline{display:block;margin:2px 0 8px;padding:7px 10px;border-radius:9px;background:color-mix(in srgb,var(--blue) 8%,transparent);font-size:12.5px;color:color-mix(in srgb,var(--blue) 70%,var(--text))}
     .bubble .tag-line{display:block;margin:4px 0 10px;padding:6px 10px;border-radius:9px;background:color-mix(in srgb,var(--blue) 8%,transparent);font-size:12.5px;line-height:1.6;color:color-mix(in srgb,var(--blue) 70%,var(--text))}
     .bubble .tag-line b{color:var(--blue);font-weight:700;margin-right:3px}
-    @media(max-width:720px){.status-bar{padding:10px 15px 2px;gap:8px}.status-bar .chip{min-width:calc(50% - 4px)}.status-bar .bar-btn{padding:0 10px;font-size:11px}}
+    @media(max-width:720px){.status-bar{padding:10px 15px 2px;gap:8px}.status-bar .chip{min-width:calc(50% - 4px)}.status-bar .bar-btn{padding:0 10px;font-size:11px}.status-bar.collapsed{padding:7px 15px 0}.status-bar.collapsed .chip{min-width:0;padding:5px 10px}.status-bar.collapsed .chip .val,.status-bar.collapsed .chip .tag::before,.status-bar.collapsed .bar-btn .btn-text{display:none}.status-bar.collapsed .bar-btn{padding:0 9px;height:28px}}
 
   .mode-switch{display:flex;gap:4px;padding:4px;border-radius:13px;background:color-mix(in srgb,var(--text) 6%,transparent);margin:2px}
   .mode-btn{flex:1;border:0;background:transparent;color:var(--muted);border-radius:10px;padding:7px 2px;font-size:12.5px;font-weight:650;transition:.18s;display:flex;align-items:center;justify-content:center;gap:6px}.mode-btn svg{width:15px;height:15px;flex:none}
@@ -266,7 +277,7 @@
       if(changed){ try{ saveState(); }catch{} }
     }
 
-    const state = {agents:[], activeId:'hatsune-miku', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'/api', model:'@makers/deepseek-v4-flash', builtinReady:null, builtinCards:[], hiddenBuiltins:[], modelList:[], thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, aborter:null, attachment:null, mode:'rp', workshopDrafts:[], shopActiveTpl:null, shopEditingId:null};
+    const state = {agents:[], activeId:'hatsune-miku', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'/api', model:'@makers/deepseek-v4-flash', builtinReady:null, builtinCards:[], hiddenBuiltins:[], modelList:[], thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, aborter:null, attachment:null, mode:'rp', workshopDrafts:[], shopActiveTpl:null, shopEditingId:null, statusCollapsed:false};
     // 网关内置免费模型（平台侧不提供 /models 接口，故在此维护；绑定自有厂商密钥后可用 provider/model 形式调用任意模型）
     const BUILTIN_MODELS = ['@makers/deepseek-v4-flash','@makers/deepseek-v4-pro','@makers/hy3','@makers/hy3-preview','@makers/minimax-m2.7','@makers/minimax-m3','@makers/kimi-k2.6'];
     const DEFAULT_MODEL = '@makers/deepseek-v4-flash';
@@ -285,6 +296,7 @@
     const ICON_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
     const ICON_REGEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>';
     const ICON_UNDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>';
+    const ICON_CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 
 
     function safeParse(raw, fallback){ try { const data=JSON.parse(raw); return data && typeof data==='object' ? data : fallback; } catch { return fallback; } }
@@ -310,6 +322,7 @@
       state.antiRepeat = saved.antiRepeat !== false;
       state.repeatThreshold = typeof saved.repeatThreshold==='number' ? saved.repeatThreshold : 0.55;
       state.memory = saved.memory !== false;
+      state.statusCollapsed = saved.statusCollapsed === true;
       state.mode = saved.mode==='worldbook' ? 'worldbook' : saved.mode==='workshop' ? 'workshop' : 'rp';
       state.workshopDrafts = Array.isArray(saved.workshopDrafts) ? saved.workshopDrafts.filter(d=>d&&d.name) : [];
       state.apiBase = typeof saved.apiBase==='string' && saved.apiBase.trim() ? saved.apiBase.trim().replace(/\/+$/,'') : '/api';
@@ -322,7 +335,7 @@
     }
 
     function saveState(){
-      const clean = {agents:state.agents, hiddenBuiltins:state.hiddenBuiltins, modelList:state.modelList, activeId:state.activeId, chats:state.chats, play:state.play, globalPrompt:state.globalPrompt, apiBase:state.apiBase, model:state.model, thinking:state.thinking, temperature:state.temperature, topP:state.topP, antiRepeat:state.antiRepeat, repeatThreshold:state.repeatThreshold, memory:state.memory, mode:state.mode, workshopDrafts:state.workshopDrafts, savedAt:now(), version:2};
+      const clean = {agents:state.agents, hiddenBuiltins:state.hiddenBuiltins, modelList:state.modelList, activeId:state.activeId, chats:state.chats, play:state.play, globalPrompt:state.globalPrompt, apiBase:state.apiBase, model:state.model, thinking:state.thinking, temperature:state.temperature, topP:state.topP, antiRepeat:state.antiRepeat, repeatThreshold:state.repeatThreshold, memory:state.memory, mode:state.mode, workshopDrafts:state.workshopDrafts, statusCollapsed:!!state.statusCollapsed, savedAt:now(), version:2};
       try { localStorage.setItem(storeKey, JSON.stringify(clean)); } catch(e){ toast('保存失败：本地存储空间不足'); }
       if(state.apiKey) localStorage.setItem(storeKey+'-key', encodeKey(state.apiKey));
       else localStorage.removeItem(storeKey+'-key');
@@ -474,11 +487,17 @@
     function renderMessages(){ const list=chat(), agent=activeAgent(), host=$('#messages'); if(!agent){ host.innerHTML=`<div class="empty"><div class="empty-orb">✦</div><h2>还没有角色</h2><p>创建一个角色卡，或去「工坊」用模板 + AI 补全快速生成，然后就能开始你的第一场剧情演绎。</p><div class="suggestions"><button class="suggestion" id="emptyCreate">＋ 创建角色</button><button class="suggestion" id="emptyWorkshop">🔧 打开角色卡工坊</button><button class="suggestion" id="emptyLibrary">☰ 内置角色库</button></div></div>`; const c=$('#emptyCreate'); if(c)c.onclick=()=>openAgentEditor(); const w=$('#emptyWorkshop'); if(w)w.onclick=()=>setMode('workshop'); const l=$('#emptyLibrary'); if(l)l.onclick=openBuiltinLibrary; return; } if(!list.length){ host.innerHTML=`<div class="empty"><div class="empty-orb">${escapeHtml(agent.emoji||'✦')}</div><h2>你好，我是${escapeHtml(agent.name)}</h2><div class="role-card"><span>剧情初始环境</span><p>${escapeHtml(agent.initialScene||agent.description||'故事正等待你的选择。')}</p></div><div class="suggestions"><button class="suggestion" id="genOpening">✨ 生成开场白</button><button class="suggestion">从开场继续</button><button class="suggestion">让冲突升级</button><button class="suggestion">描述周围的细节</button></div></div>`; const go=$('#genOpening'); if(go)go.onclick=generateOpening; host.querySelectorAll('.suggestion:not(#genOpening)').forEach(b=>b.onclick=()=>{$('#prompt').value=b.textContent;$('#prompt').focus();}); return; } host.innerHTML=list.map(m=>`<article class="message ${m.role==='user'?'user':''}" data-id="${m.id}"><div class="msg-body"><div class="msg-meta"><span class="who"><i class="mini-avatar">${m.role==='user'?'我':escapeHtml(agent.emoji||'✦')}</i>${m.role==='user'?'你':escapeHtml(agent.name)}</span><span>·</span><time title="${new Date(m.createdAt).toLocaleString('zh-CN')}">${relative(m.createdAt)}</time></div><div class="bubble">${markdown(m.displayContent||m.content)}</div><div class="message-actions"><button data-action="copy" title="复制">${ICON_COPY}</button>${m.role==='assistant'?'<button data-action="regen" title="重新生成">'+ICON_REGEN+'</button>':''}${m.role==='user'?'<button data-action="undo" title="撤回">'+ICON_UNDO+'</button>':''}</div></div></article>`).join(''); host.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>messageAction(b.closest('.message').dataset.id,b.dataset.action)); host.scrollTop=host.scrollHeight; }
 
     function renderStatus(){
-      const p = play();
-      $('#statusBar').innerHTML = `<div class="chip scene"><div class="tag">当前场景</div><div class="val">${escapeHtml(p.scene||'')}</div></div><div class="bar-btns"><button class="bar-btn" id="editStatusBtn" title="编辑场景/摘要">✎ 编辑</button><button class="bar-btn" id="genSummaryBtn" title="把当前对话压缩成剧情摘要（长记忆）">⧉ 生成摘要</button></div>`;
+      const p = play(), collapsed = !!state.statusCollapsed;
+      const toggleLabel = collapsed ? '展开当前场景与状态' : '折叠当前场景与状态';
+      $('#statusBar').className = 'status-bar' + (collapsed ? ' collapsed' : '');
+      $('#statusBar').innerHTML = `<div class="chip scene${collapsed?' collapsed':''}"><div class="tag">当前场景<button class="chip-toggle" id="sceneToggle" title="${toggleLabel}" aria-label="${toggleLabel}" aria-expanded="${collapsed?'false':'true'}">${ICON_CHEVRON}</button></div><div class="val">${escapeHtml(p.scene||'')}</div></div><div class="bar-btns"><button class="bar-btn" id="editStatusBtn" title="编辑场景/摘要">✎ <span class="btn-text">编辑</span></button><button class="bar-btn" id="genSummaryBtn" title="把当前对话压缩成剧情摘要（长记忆）">⧉ <span class="btn-text">生成摘要</span></button></div>`;
+      $('#sceneToggle').onclick = toggleStatusCollapsed;
       $('#editStatusBtn').onclick = openStatusEditor;
       $('#genSummaryBtn').onclick = generateSummary;
     }
+
+    // 折叠开关：只切换场景/状态栏的展示高度，不影响注入给模型的场景内容
+    function toggleStatusCollapsed(){ state.statusCollapsed = !state.statusCollapsed; saveState(); renderStatus(); }
 
     function render(){ document.querySelector('.app').dataset.mode = state.mode; document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===state.mode)); const agent=activeAgent(); const p=agent?play():null; if(state.mode==='worldbook'){ $('#chatTitle').textContent='世界书'; $('#chatSubtitle').textContent='多角色 · 事件进展 · 正反派 · 剧情'; } else if(state.mode==='workshop'){ $('#chatTitle').textContent='角色卡工坊'; $('#chatSubtitle').textContent='模板填空 · AI 补全 · 一键导入'; renderShop(); } else if(!agent){ $('#chatAvatar').textContent='✦'; $('#chatTitle').textContent='AI 剧场'; $('#chatSubtitle').textContent='创建你的第一个角色，开始剧情演绎'; } else { if(!p._init){ p._init=true; if(!p.scene) p.scene=agent.initialScene||''; } $('#chatAvatar').textContent=agent.emoji||'✦';$('#chatTitle').textContent=agent.name;$('#chatSubtitle').textContent=agent.relationship||agent.description||'未设置角色关系'; } $('#memoryToggle').checked=state.memory; renderAgents();renderMessages();renderStatus();updateKeyStatus(); }
 
