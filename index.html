@@ -61,6 +61,12 @@
     .send{transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease,background .2s ease}.send:hover{transform:translateY(-2px);box-shadow:0 9px 18px rgba(69,103,246,.36)}.send:active{transform:scale(.91)}.send:disabled{transform:none}
     .send.stop{background:var(--danger);box-shadow:0 5px 12px color-mix(in srgb,var(--danger) 40%,transparent);font-size:13px}.send.stop:hover{background:var(--danger);box-shadow:0 9px 18px color-mix(in srgb,var(--danger) 45%,transparent)}
     .toast{transform:translate(-50%,20px) scale(.96);transition:.28s cubic-bezier(.2,.8,.2,1)}.toast.show{transform:translate(-50%,0) scale(1)}
+    .message-actions button.active{color:var(--blue);border-color:color-mix(in srgb,var(--blue) 40%,var(--line));background:color-mix(in srgb,var(--blue) 8%,var(--solid))}
+    .msg-translation{margin:7px 0 0;padding:10px 12px;border:1px dashed color-mix(in srgb,var(--blue) 30%,var(--line));border-radius:12px;background:color-mix(in srgb,var(--blue) 5%,transparent);font-size:13.5px;line-height:1.62;color:var(--text)}
+    .msg-translation.loading{color:var(--muted);font-size:12.5px;display:flex;align-items:center;gap:7px}
+    .msg-translation .tr-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;font-weight:700;letter-spacing:.02em;color:color-mix(in srgb,var(--blue) 70%,var(--text));margin-bottom:5px}
+    .msg-translation .tr-lang{font-weight:500;color:var(--muted)}
+    .msg-translation .tr-body p:last-child{margin-bottom:0}
     @keyframes brandFloat{50%{transform:translateY(-2px) rotate(4deg)}}@keyframes orbDrift{50%{transform:translateY(-7px) rotate(4deg);box-shadow:0 21px 42px rgba(94,100,230,.36)}}@keyframes softEnter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}@keyframes messageIn{from{opacity:0;transform:translateY(9px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
     .role-card{margin:20px auto 12px;max-width:430px;padding:14px 16px;text-align:left;border:1px solid var(--line);border-radius:16px;background:var(--panel);backdrop-filter:blur(18px);box-shadow:0 8px 25px rgba(45,51,91,.07)}.role-card span{display:block;margin-bottom:6px;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--blue);text-transform:uppercase}.role-card p{margin:0!important;color:var(--text);font-size:13px;line-height:1.65}.opening-line{max-width:430px;margin:0 auto;color:var(--muted);font-size:13px;font-style:italic;line-height:1.65}.empty .role-card+.opening-line+.suggestions{margin-top:18px}
@@ -322,6 +328,7 @@
     const ICON_REGEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>';
     const ICON_UNDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>';
     const ICON_CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+    const ICON_TRANSLATE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h9"/><path d="M7.5 5V3"/><path d="M5.5 5c0 4.5-1.4 7.4-3.5 9.5"/><path d="M3.2 11.2c1.8 2.2 4.1 3.4 6.3 3.9"/><path d="M12.5 21l3.7-9 3.8 9"/><path d="M13.9 17.5h4.9"/></svg>';
 
 
     function safeParse(raw, fallback){ try { const data=JSON.parse(raw); return data && typeof data==='object' ? data : fallback; } catch { return fallback; } }
@@ -548,7 +555,7 @@
 
     function renderAgents(){ $('#agentList').innerHTML=allAgents().map(a=>`<button class="agent ${a.id===state.activeId?'active':''}" data-agent="${escapeHtml(a.id)}"><div class="avatar">${escapeHtml(a.emoji||'✦')}</div><div class="agent-info"><div class="agent-name">${escapeHtml(a.name)}${isBuiltinId(a.id)?'<i class="builtin-tag">内置</i>':''}</div><div class="agent-desc">${escapeHtml(a.description||'未设置人设')}</div></div></button>`).join(''); $('#agentList').querySelectorAll('[data-agent]').forEach(el=>el.onclick=()=>{state.activeId=el.dataset.agent;saveState();render();closeSide();}); }
 
-    function renderMessages(){ const list=chat(), agent=activeAgent(), host=$('#messages'); if(!agent){ host.innerHTML=`<div class="empty"><div class="empty-orb">✦</div><h2>还没有角色</h2><p>创建一个角色卡，或去「工坊」用模板 + AI 补全快速生成，然后就能开始你的第一场剧情演绎。</p><div class="suggestions"><button class="suggestion" id="emptyCreate">＋ 创建角色</button><button class="suggestion" id="emptyWorkshop">🔧 打开角色卡工坊</button><button class="suggestion" id="emptyLibrary">☰ 内置角色库</button></div></div>`; const c=$('#emptyCreate'); if(c)c.onclick=()=>openAgentEditor(); const w=$('#emptyWorkshop'); if(w)w.onclick=()=>setMode('workshop'); const l=$('#emptyLibrary'); if(l)l.onclick=openBuiltinLibrary; return; } if(!list.length){ host.innerHTML=`<div class="empty"><div class="empty-orb">${escapeHtml(agent.emoji||'✦')}</div><h2>你好，我是${escapeHtml(agent.name)}</h2><div class="role-card"><span>剧情初始环境</span><p>${escapeHtml(agent.initialScene||agent.description||'故事正等待你的选择。')}</p></div><div class="suggestions"><button class="suggestion" id="genOpening">✨ 生成开场白</button><button class="suggestion">从开场继续</button><button class="suggestion">让冲突升级</button><button class="suggestion">描述周围的细节</button></div></div>`; const go=$('#genOpening'); if(go)go.onclick=generateOpening; host.querySelectorAll('.suggestion:not(#genOpening)').forEach(b=>b.onclick=()=>{$('#prompt').value=b.textContent;$('#prompt').focus();}); return; } host.innerHTML=list.map(m=>`<article class="message ${m.role==='user'?'user':''}" data-id="${m.id}"><div class="msg-body"><div class="msg-meta"><span class="who"><i class="mini-avatar">${m.role==='user'?'我':escapeHtml(agent.emoji||'✦')}</i>${m.role==='user'?'你':escapeHtml(agent.name)}</span><span>·</span><time title="${new Date(m.createdAt).toLocaleString('zh-CN')}">${relative(m.createdAt)}</time></div><div class="bubble">${markdown(m.displayContent||m.content)}</div><div class="message-actions"><button data-action="copy" title="复制">${ICON_COPY}</button>${m.role==='assistant'?'<button data-action="regen" title="重新生成">'+ICON_REGEN+'</button>':''}${m.role==='user'?'<button data-action="undo" title="撤回">'+ICON_UNDO+'</button>':''}</div></div></article>`).join(''); host.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>messageAction(b.closest('.message').dataset.id,b.dataset.action)); host.scrollTop=host.scrollHeight; }
+    function renderMessages(){ const list=chat(), agent=activeAgent(), host=$('#messages'); if(!agent){ host.innerHTML=`<div class="empty"><div class="empty-orb">✦</div><h2>还没有角色</h2><p>创建一个角色卡，或去「工坊」用模板 + AI 补全快速生成，然后就能开始你的第一场剧情演绎。</p><div class="suggestions"><button class="suggestion" id="emptyCreate">＋ 创建角色</button><button class="suggestion" id="emptyWorkshop">🔧 打开角色卡工坊</button><button class="suggestion" id="emptyLibrary">☰ 内置角色库</button></div></div>`; const c=$('#emptyCreate'); if(c)c.onclick=()=>openAgentEditor(); const w=$('#emptyWorkshop'); if(w)w.onclick=()=>setMode('workshop'); const l=$('#emptyLibrary'); if(l)l.onclick=openBuiltinLibrary; return; } if(!list.length){ host.innerHTML=`<div class="empty"><div class="empty-orb">${escapeHtml(agent.emoji||'✦')}</div><h2>你好，我是${escapeHtml(agent.name)}</h2><div class="role-card"><span>剧情初始环境</span><p>${escapeHtml(agent.initialScene||agent.description||'故事正等待你的选择。')}</p></div><div class="suggestions"><button class="suggestion" id="genOpening">✨ 生成开场白</button><button class="suggestion">从开场继续</button><button class="suggestion">让冲突升级</button><button class="suggestion">描述周围的细节</button></div></div>`; const go=$('#genOpening'); if(go)go.onclick=generateOpening; host.querySelectorAll('.suggestion:not(#genOpening)').forEach(b=>b.onclick=()=>{$('#prompt').value=b.textContent;$('#prompt').focus();}); return; } host.innerHTML=list.map(m=>`<article class="message ${m.role==='user'?'user':''}" data-id="${m.id}"><div class="msg-body"><div class="msg-meta"><span class="who"><i class="mini-avatar">${m.role==='user'?'我':escapeHtml(agent.emoji||'✦')}</i>${m.role==='user'?'你':escapeHtml(agent.name)}</span><span>·</span><time title="${new Date(m.createdAt).toLocaleString('zh-CN')}">${relative(m.createdAt)}</time></div><div class="bubble">${markdown(m.displayContent||m.content)}</div>${translationBlock(m)}<div class="message-actions"><button data-action="copy" title="复制">${ICON_COPY}</button><button data-action="translate" class="${m.translation&&!m.translationHidden?'active':''}" title="${m.translation?(m.translationHidden?'显示译文':'隐藏译文'):'翻译'}"${m.translationLoading?' disabled':''}>${ICON_TRANSLATE}</button>${m.role==='assistant'?'<button data-action="regen" title="重新生成">'+ICON_REGEN+'</button>':''}${m.role==='user'?'<button data-action="undo" title="撤回">'+ICON_UNDO+'</button>':''}</div></div></article>`).join(''); host.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>messageAction(b.closest('.message').dataset.id,b.dataset.action)); host.scrollTop=host.scrollHeight; }
 
     function renderStatus(){
       const p = play(), collapsed = !!state.statusCollapsed;
@@ -572,7 +579,36 @@
 
     async function copy(text){ try{await navigator.clipboard.writeText(text);toast('已复制到剪贴板');}catch{toast('复制失败，请手动复制');} }
 
-    function messageAction(id,action){ const messages=chat(),index=messages.findIndex(m=>m.id===id),m=messages[index]; if(!m)return; if(action==='copy')return copy(m.displayContent||m.content); if(action==='undo'){ const isLastTurn=m.role==='user'&&(index===messages.length-1||(index===messages.length-2&&messages.at(-1)?.role==='assistant')); if(!isLastTurn)return toast('只能撤回最后一轮对话'); messages.splice(index);saveState();renderMessages();toast('已撤回最后一轮对话'); } if(action==='regen'){ if(state.busy)return; if(index!==messages.length-1||m.role!=='assistant')return toast('只能重新生成最后一条 AI 回复'); const previous=messages[index-1]; if(!previous||previous.role!=='user')return toast('没有可用于重新生成的上一条提问'); messages.pop();saveState();renderMessages();sendMessage(previous.content,true); } }
+    function messageAction(id,action){ const messages=chat(),index=messages.findIndex(m=>m.id===id),m=messages[index]; if(!m)return; if(action==='copy')return copy(m.displayContent||m.content); if(action==='translate'){ translateMessage(m); return; } if(action==='undo'){ const isLastTurn=m.role==='user'&&(index===messages.length-1||(index===messages.length-2&&messages.at(-1)?.role==='assistant')); if(!isLastTurn)return toast('只能撤回最后一轮对话'); messages.splice(index);saveState();renderMessages();toast('已撤回最后一轮对话'); } if(action==='regen'){ if(state.busy)return; if(index!==messages.length-1||m.role!=='assistant')return toast('只能重新生成最后一条 AI 回复'); const previous=messages[index-1]; if(!previous||previous.role!=='user')return toast('没有可用于重新生成的上一条提问'); messages.pop();saveState();renderMessages();sendMessage(previous.content,true); } }
+
+    // 译文展示块：翻译中显示占位，已有译文且未隐藏时显示译文
+    function translationBlock(m){
+      if(m.translationLoading) return '<div class="msg-translation loading"><span class="dots"><i></i><i></i><i></i></span>翻译中…</div>';
+      if(!m.translation || m.translationHidden) return '';
+      return '<div class="msg-translation"><div class="tr-head"><span>✧ 译文</span><span class="tr-lang">'+escapeHtml(m.translationTarget||'')+'</span></div><div class="tr-body">'+markdown(m.translation)+'</div></div>';
+    }
+
+    // 一键翻译：已有译文则切换显示/隐藏，未翻译则请求 /api/translate 并缓存到消息上
+    async function translateMessage(m){
+      if(m.translationLoading) return;
+      if(m.translation){ m.translationHidden=!m.translationHidden; renderMessages(); return; }
+      m.translationLoading=true; renderMessages();
+      try{
+        const res = await fetch('/api/translate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: m.displayContent||m.content }) });
+        const data = await res.json().catch(()=>({}));
+        if(!res.ok) throw new Error(data.error?.message || ('HTTP '+res.status));
+        const text = String(data.translation||'').trim();
+        if(!text) throw new Error('翻译服务未返回内容');
+        m.translation=text; m.translationTarget=data.target||''; m.translationHidden=false;
+      }catch(e){
+        m.translationLoading=false; renderMessages();
+        const raw = String((e && e.message) || e);
+        const friendly = /fetch|network|timeout/i.test(raw) ? classifyError(e) : raw.replace(/^\s*\d{3}\s*/, '').slice(0, 160);
+        toast('翻译失败：'+(friendly || '请稍后重试')); return;
+      }
+      m.translationLoading=false; saveState(); renderMessages();
+      toast('已翻译为'+(m.translationTarget||'译文'));
+    }
 
     function buildSystem(){
       const a = activeAgent();

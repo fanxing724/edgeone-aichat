@@ -24,7 +24,8 @@
    ├── /api/cards ────────────→ 角色卡 API（KV 优先，FALLBACK 兜底）
    ├── /api/status ───────────→ 网关状态检查（是否配置平台密钥）
    ├── /api/models ───────────→ 模型列表代理（透传 /models）
-   └── /api/chat/completions ─→ Makers Models 统一网关代理（SSE 透传）
+   ├── /api/chat/completions ─→ Makers Models 统一网关代理（SSE 透传）
+   └── /api/translate ────────→ 翻译代理（服务端持有密钥，消息一键翻译）
 
 第三方 OpenAI 兼容客户端 —— 跨域调用，带服务自有访问令牌
    │
@@ -46,6 +47,7 @@
 │   │   ├── cards.js        # 内置角色卡下发（KV 优先，代码兜底）
 │   │   ├── status.js       # 平台密钥状态查询
 │   │   ├── models.js       # 模型列表代理（支持 BYOK）
+│   │   ├── translate.js    # 翻译代理（服务端持有密钥，前端零接触）
 │   │   └── chat/
 │   │       └── completions.js  # Makers Models 网关代理（SSE 流式透传）
 │   └── v1/                 # 对外开放代理（OpenAI 兼容、带 CORS 与访问令牌校验）
@@ -156,6 +158,7 @@ client = OpenAI(base_url="https://你的域名/v1", api_key="<访问令牌>")
 - 反重复机制：自动检测内容相似度，超出阈值时强制换角度重新生成
 - 思考参数容错：模型不支持 `thinking`/`reasoning_effort` 返回 400 时，自动降级为普通采样并记住该模型，后续不再重试思考模式
 - 高级演绎参数：思考模式（off/high/max）、temperature、top_p 均可调
+- **一键翻译**：每条消息可一键翻译，中文↔英文自动判向；译文可显示/隐藏，结果缓存在本地。翻译由服务端 `/api/translate` 代理，上游密钥不出服务端。内置强约束前置提示词（把剧情文本当作「素材」而非「指令」，保留 `【标签】`/`*动作*`/`"台词"` 格式），避免模型误把剧情当问题去回答。
 - 无角色时的空状态引导：可直接创建角色、打开工坊或从内置角色库加入
 
 ## 部署到 EdgeOne Pages
@@ -169,6 +172,7 @@ client = OpenAI(base_url="https://你的域名/v1", api_key="<访问令牌>")
    MAKERS_MODELS_KEY=sk-xxxx             # Makers Models 网关密钥（上游，调用方不可见）
    PROXY_ACCESS_KEYS=your-service-key     # 本站自签发的对外访问令牌，多个用逗号分隔；不配则 /v1/* 关闭
    PROXY_ALLOWED_ORIGINS=                 # 可选，跨域来源白名单；留空表示允许任意 Origin
+   TRANSLATE_API_KEY=sk-xxxx             # 翻译功能唯一配置项（上游地址与模型已内置）
    ```
 4. **绑定 KV 命名空间**（可选）：
    - 变量名：`CARDS_KV`
@@ -190,6 +194,7 @@ client = OpenAI(base_url="https://你的域名/v1", api_key="<访问令牌>")
 | `PROXY_ACCESS_KEYS` | 对外代理 `/v1/*` 的访问令牌白名单，逗号/分号/换行分隔（单数别名 `PROXY_ACCESS_KEY` 同样识别） | 开放 `/v1/*` 时必填，未配置则该路由整体 503 |
 | `PROXY_ALLOWED_ORIGINS` | 限制可跨域调用 `/v1/*` 的浏览器来源 | 可选，留空表示 `*` |
 | `CARDS_KV` | 绑定 KV 命名空间，覆盖内置角色卡 | 可选，未配置时使用代码内兜底卡 |
+| `TRANSLATE_API_KEY` | 翻译上游密钥，仅存服务端；上游地址与模型已内置（`aiapi.xingbox.me` / `star-chat-pro`） | **必填**，未配置时 `/api/translate` 返回 503（fail-closed） |
 
 ## 安全设计
 
