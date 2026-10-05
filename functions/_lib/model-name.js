@@ -1,3 +1,8 @@
+// 位置约束：本目录必须位于 functions/ 下（functions/_lib/）。
+// 路由引用按目录深度写相对路径：functions/api/x.js → ../_lib/x.js；
+// functions/api/<sub>/x.js → ../../_lib/x.js。打包器不解析 workspace 根的 tsconfig paths，
+// 也不跟随一级目录之外的软链，路径写错会在部署构建时报 Could not resolve。
+
 // 边缘函数共享库：模型名归一化与兜底清单
 // - applyModelPrefix：不带 "/" 的裸模型名自动补 @makers/ 前缀（如 deepseek-v4-flash → @makers/deepseek-v4-flash）；
 //   带 "/" 的按 provider/model 原样透传（如 openai/gpt-5）。/api 与 /v1 两条聊天代理共用此实现。

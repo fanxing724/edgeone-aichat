@@ -5,7 +5,7 @@
 // - proxy   PROXY_ACCESS_KEYS 是否已配置（否则 /v1/* 一律 503）
 // - gateway MAKERS_MODELS_KEY 是否已配置（否则无法调用上游）
 
-import { platformKey, hasAccessKeys } from '../../_lib/env.js';
+import { platformKey, hasAccessKeys } from '../_lib/env.js';
 
 export function onRequest(context) {
   const { request, env } = context;

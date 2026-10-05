@@ -40,6 +40,8 @@
 ├── index.html              # 前端单页应用（全部 UI/逻辑/样式内联）
 ├── functions/              # EdgeOne Pages 边缘函数
 │   ├── _lib/               # 边缘函数共享库（env / http / cors / gate / model-name；_ 前缀不注册路由）
+│   │                       # 引用规则：functions/api/x.js → ../_lib/x.js；functions/<a>/<b>/x.js → ../../_lib/x.js
+│   │                       # 打包器不解析 tsconfig paths、不跟随一级目录外的软链，路径写错部署构建会报 Could not resolve
 │   ├── api/                # 本站页面专用（同源、无 CORS 头）
 │   │   ├── cards.js        # 内置角色卡下发（KV 优先，代码兜底）
 │   │   ├── status.js       # 平台密钥状态查询

@@ -5,9 +5,9 @@
 // （复用 _lib/gate.js）：调用方令牌只校验 PROXY_ACCESS_KEYS，上游一律使用服务端 MAKERS_MODELS_KEY。
 // EdgeOne 网关若不提供 /models，则回落到 _lib/model-name.js 的已知清单，保证客户端不会拿到空列表。
 
-import { corsHeaders, corsJson } from '../../_lib/cors.js';
-import { gate } from '../../_lib/gate.js';
-import { KNOWN_MODELS } from '../../_lib/model-name.js';
+import { corsHeaders, corsJson } from '../_lib/cors.js';
+import { gate } from '../_lib/gate.js';
+import { KNOWN_MODELS } from '../_lib/model-name.js';
 
 const UPSTREAM_MODELS = 'https://ai-gateway.edgeone.link/v1/models';
 const METHODS = 'GET, OPTIONS';
