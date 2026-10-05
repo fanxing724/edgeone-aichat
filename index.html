@@ -99,27 +99,38 @@
   .mode-btn{flex:1;border:0;background:transparent;color:var(--muted);border-radius:10px;padding:7px 2px;font-size:12.5px;font-weight:650;transition:.18s;display:flex;align-items:center;justify-content:center;gap:6px}.mode-btn svg{width:15px;height:15px;flex:none}
   .mode-btn.active{background:var(--solid);color:var(--text);box-shadow:0 3px 10px rgba(25,30,60,.08)}
   .mode-btn:hover{color:var(--text)}
-  .wb-view{display:none;flex:1;min-width:0;overflow:auto;padding:30px}
-  .app[data-mode="worldbook"] .wb-view{display:flex;align-items:center;justify-content:center}
+  .wb-view{display:none;flex:1;min-width:0;overflow:auto;padding:18px 24px 30px}
+  .app[data-mode="worldbook"] .wb-view{display:block}
   .app[data-mode="worldbook"] .topbar .chat-avatar,
   .app[data-mode="worldbook"] .topbar #editAgent,
   .app[data-mode="worldbook"] .topbar #restartChat,
   .app[data-mode="worldbook"] .topbar #clearAllMemory,
-  .app[data-mode="worldbook"] .side-head,
-  .app[data-mode="worldbook"] .agent-list,
   .app[data-mode="worldbook"] .status-bar,
   .app[data-mode="worldbook"] .messages,
   .app[data-mode="worldbook"] .composer-wrap{display:none}
-  .wb-hero{max-width:520px;text-align:center;padding:20px}
-  .wb-orb{width:88px;height:88px;margin:0 auto 20px;border-radius:30px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#a88bff,#5476ff);box-shadow:0 18px 40px rgba(94,100,230,.3)}.wb-orb svg{width:44px;height:44px}
-  .wb-hero h2{font-size:26px;margin:0 0 10px;letter-spacing:-.03em}
-  .wb-desc{color:var(--muted);font-size:14px;line-height:1.7;margin:0 0 26px}
-  .wb-features{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:28px}
-  .wb-feat{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;background:var(--panel);padding:8px 14px;font-size:13px}
-  .wb-feat span{font-size:15px}
-  .wb-coming{font-size:12px;color:var(--muted);letter-spacing:.08em}
-  .wb-back{margin-top:24px;border:1px solid var(--line);background:var(--solid);color:var(--text);border-radius:12px;padding:10px 20px;font-size:13px;font-weight:650;cursor:pointer;transition:.18s}.wb-back:hover{border-color:var(--blue);color:var(--blue)}
-  @media(max-width:720px){.wb-view{padding:20px 16px}.wb-hero h2{font-size:22px}}
+  /* ===== 世界书（Lorebook）管理器 ===== */
+  .wb-manager{max-width:860px;margin:0 auto}
+  .wb-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .wb-top h2{margin:0;font-size:20px;letter-spacing:-.02em}
+  .wb-top .spacer{flex:1}
+  .wb-top .btn{font-size:12.5px}
+  .wb-intro{color:var(--muted);font-size:13px;line-height:1.7;margin:0 0 18px;padding:12px 14px;border:1px dashed var(--line);border-radius:13px}
+  .wb-intro b{color:var(--text)}
+  .wb-list{display:flex;flex-direction:column;gap:10px}
+  .wb-entry{border:1px solid var(--line);border-radius:15px;background:var(--panel);padding:12px 14px;display:flex;flex-direction:column;gap:7px;transition:opacity .18s ease}
+  .wb-entry.off{opacity:.55}
+  .wb-entry-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .wb-keys{display:flex;gap:5px;flex-wrap:wrap;flex:1;min-width:0;align-items:center}
+  .wb-key{border:1px solid color-mix(in srgb,var(--blue) 35%,var(--line));color:var(--blue);background:color-mix(in srgb,var(--blue) 9%,transparent);border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:600}
+  .wb-key.always{color:var(--green);border-color:color-mix(in srgb,var(--green) 40%,var(--line));background:color-mix(in srgb,var(--green) 10%,transparent)}
+  .wb-entry-btns{display:flex;gap:6px;flex:none}
+  .wb-entry-btns button{border:1px solid var(--line);background:var(--solid);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:11.5px;transition:.18s}
+  .wb-entry-btns button:hover{color:var(--blue);border-color:var(--blue)}
+  .wb-entry-btns button.danger:hover{color:var(--danger);border-color:var(--danger)}
+  .wb-entry-content{font-size:13px;line-height:1.65;color:var(--text);white-space:pre-wrap;word-break:break-word;max-height:92px;overflow:hidden;position:relative}
+  .wb-entry-content.fade::after{content:'';position:absolute;left:0;right:0;bottom:0;height:24px;background:linear-gradient(transparent,var(--panel))}
+  .wb-empty{padding:34px 16px;text-align:center;color:var(--muted);font-size:13px;line-height:1.8;border:1px dashed var(--line);border-radius:15px}
+  @media(max-width:720px){.wb-view{padding:14px 13px 22px}.wb-top h2{font-size:18px}.wb-entry-content{max-height:110px}}
 
   /* ===== 角色卡工坊 ===== */
   .shop-view{display:none;flex:1;min-width:0;overflow:auto;padding:18px 24px 30px}
@@ -208,7 +219,19 @@
       <div class="status-bar" id="statusBar"></div>
       <section class="messages" id="messages"></section>
       <div class="composer-wrap"><div class="composer"><div class="attachment-preview" id="attachmentPreview" hidden><span id="attachmentName"></span><button type="button" id="removeAttachment" title="移除附件">×</button></div><textarea id="prompt" placeholder="写下行动、对话或叙述…（支持 *动作* “台词” 【状态】标记）" aria-label="输入消息"></textarea><div class="composer-bottom"><button class="attach-file" id="attachFile" type="button" title="添加文本附件">＋</button><label class="memory-switch"><input id="memoryToggle" type="checkbox" checked> 保留剧情记忆</label><span class="shortcut">⌘ / Ctrl + Enter 发送</span><button class="send" id="sendButton" title="推进剧情">↑</button></div><input id="chatFileInput" type="file" accept=".txt,.md,.json,.csv,.html,.js,.ts,.py,.java,.c,.cpp,.css,text/plain,text/markdown,application/json,text/csv" hidden></div></div>
-      <div class="wb-view" id="wbView" hidden><div class="wb-hero"><div class="wb-orb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6C10.5 5 9 4.5 7 4.5S3.5 5 2 6v11.5c1.5-1 3-1.5 5-1.5s3.5.5 5 1.5c1.5-1 3-1.5 5-1.5s3.5.5 5 1.5V6c-1.5-1-3-1.5-5-1.5S13.5 5 12 6z"/><path d="M12 6v11.5"/><path d="M7.5 8.5c1.2-.3 2.3-.3 3.5 0"/><path d="M16.5 8.5c-1.2-.3-2.3-.3-3.5 0"/></svg></div><h2>世界书模式</h2><p class="wb-desc">一个更宏大的创作舞台：多角色同场、事件随时间推进、正派与反派博弈、完整的剧情脉络。</p><div class="wb-features"><div class="wb-feat">多角色</div><div class="wb-feat">事件进展</div><div class="wb-feat">正派 / 反派</div><div class="wb-feat">剧情树</div><div class="wb-feat">世界设定</div></div><p class="wb-coming">即将上线，敬请期待</p><button class="wb-back" id="wbBackBtn">← 返回剧情演绎</button></div></div>
+      <div class="wb-view" id="wbView" hidden>
+        <div class="wb-manager">
+          <div class="wb-top">
+            <h2>世界书</h2><span class="spacer"></span>
+            <button class="btn ghost" id="wbImportBtn" title="导入酒馆（SillyTavern）World Info JSON">↥ 导入</button>
+            <button class="btn ghost" id="wbExportBtn" title="导出为酒馆 World Info JSON（可回导酒馆或本站）">↧ 导出</button>
+            <button class="btn primary" id="wbAddBtn">＋ 新增条目</button>
+          </div>
+          <p class="wb-intro">按<b>关键词触发</b>的世界观资料：当最近对话命中条目关键词（或条目为常驻）时，其内容会自动注入给模型的系统提示，用于补充世界观、背景与伏笔。兼容酒馆（SillyTavern）World Info JSON 导入导出，条目仅作用于当前角色。</p>
+          <div class="wb-list" id="wbList"></div>
+          <input id="wbFileInput" type="file" accept=".json,application/json" hidden>
+        </div>
+      </div>
       <div class="shop-view" id="shopView" hidden>
         <div class="shop-top">
           <h2>角色卡工坊</h2><span class="spacer"></span>
@@ -292,6 +315,8 @@
       { id:'mystery', emoji:'🎭', name:'神秘引路型', description:'悬念感、推动剧情', fields:{ baseDirective:'敏锐、克制、略带神秘感。善于通过细节、对话和行动推进剧情，不主动交代所有信息。', persona:'你是一个神秘的引路人，总是在关键处出现，留下线索但不给全部答案。每句话都带着暗示和悬念。', relationship:'你是我寻找真相路上唯一知道秘密的人。' } },
       { id:'intruder', emoji:'⚡', name:'闯入变数型', description:'突然介入、打破现状', fields:{ baseDirective:'节奏快、信息密度高，每句话都带来新的变量或转折。语气带有不确定感和冲击力，禁止铺垫和寒暄。', persona:'【核心性格】\n· 突然出现：你的到来本身就改变局势，让所有人措手不及。\n· 信息冲击：你知道一些别人不知道的事，但只在该说的时候说一句，剩下的留给对方消化。\n· 立场模糊：你可能是敌是友，自己也未必清楚，一切看对方如何接招。' } }
     ];
+    // 工坊字段 ↔ 表单控件 ID 的唯一映射（读取 / 填充 / 清空共用，避免多处克隆导致漏改）
+    const WORKSHOP_FIELDS = {name:'shopName',emoji:'shopEmoji',description:'shopDesc',baseDirective:'shopBaseDirective',persona:'shopPersona',userProfile:'shopUserProfile',initialScene:'shopInitialScene',relationship:'shopRelationship'};
     const storeKey = 'ai-theater-v1';
     const ICON_COPY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
     const ICON_REGEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>';
@@ -404,18 +429,57 @@
       }catch{return null;}
     }
 
-    // 统一映射外部角色卡（酒馆 V2/V3 或自定义 JSON）到表单字段
+    // 统一映射外部角色卡（酒馆 V2/V3 或自定义 JSON）到表单字段。
+    // 兼容：① 酒馆 V2/V3 卡（含 data.name 判定）② 本站导出的酒馆 V2 卡（extensions.ai_theater 还原专有字段）
+    // ③ 自定义扁平 JSON ④ 数组形态（取首张，兼容本站旧版批量导出文件）。
     function normalizeImportCard(src){
+      if(Array.isArray(src)) src = src[0] || {};
       if(!src||typeof src!=='object')return {};
       const d=src.data&&typeof src.data==='object'?src.data:{};
       const pick=(...vals)=>{for(const v of vals){if(typeof v==='string'&&v.trim())return v.trim();}return '';};
+      const ext=(d.extensions&&typeof d.extensions==='object'&&d.extensions.ai_theater)||{};
       const isST=!!(src.first_mes||src.char_greeting||d.first_mes||(src.data&&d.name));
       if(!isST)return {name:pick(src.name,src.characterName),emoji:pick(src.emoji),description:pick(src.description,src.summary),baseDirective:pick(src.baseDirective,src.directive),persona:pick(src.persona,src.personality,src.character),initialScene:pick(src.initialScene,src.scene),relationship:pick(src.relationship),userProfile:pick(src.userProfile,src.userPersona,src.myProfile)};
       const greeting=pick(src.first_mes,d.first_mes,Array.isArray(d.alternate_greetings)?String(d.alternate_greetings[0]||''):'');
       const persona=[pick(src.description,d.description),pick(src.personality,d.personality)&&('【性格】'+pick(src.personality,d.personality)),pick(src.mes_example,d.mes_example)&&('【对话风格示例】'+pick(src.mes_example,d.mes_example))].filter(Boolean).join('\n\n');
       const scene=[pick(src.scenario,d.scenario),greeting&&('【开场白参考】'+greeting)].filter(Boolean).join('\n\n');
       const tags=Array.isArray(d.tags)?d.tags.filter(t=>typeof t==='string'):Array.isArray(src.tags)?src.tags.filter(t=>typeof t==='string'):[];
-      return {name:pick(d.name,src.name),description:pick(src.creator_notes,d.creator_notes,tags.slice(0,4).join(' · ')).slice(0,60),persona,initialScene:scene};
+      return {
+        name:pick(d.name,src.name),
+        emoji:pick(ext.emoji,src.emoji),
+        description:pick(src.creator_notes,d.creator_notes,tags.slice(0,4).join(' · ')).slice(0,60),
+        baseDirective:pick(ext.baseDirective,d.system_prompt),
+        persona,
+        userProfile:pick(ext.userProfile),
+        initialScene:scene,
+        relationship:pick(ext.relationship)
+      };
+    }
+
+    // 本站角色卡 → 酒馆 V2 角色卡（chara_card_v2 规范），可直接导入酒馆及兼容客户端。
+    // 本站专有字段（emoji / baseDirective 原文 / userProfile / relationship）放入 data.extensions.ai_theater，
+    // 回导本站时优先还原，保证导出导入 round-trip 不丢字段。
+    function cardToStV2(card){
+      return {
+        spec:'chara_card_v2',
+        spec_version:'2.0',
+        data:{
+          name:card.name||'',
+          description:card.persona||'',
+          personality:'',
+          scenario:card.initialScene||'',
+          first_mes:'',
+          mes_example:'',
+          creator_notes:card.description||'',
+          system_prompt:card.baseDirective||'',
+          post_history_instructions:'',
+          alternate_greetings:[],
+          tags:[],
+          creator:'AI 剧场',
+          character_version:'1.0',
+          extensions:{ai_theater:{emoji:card.emoji||'✦',baseDirective:card.baseDirective||'',userProfile:card.userProfile||'',relationship:card.relationship||''}}
+        }
+      };
     }
 
     function fillFormFromCard(card){
@@ -499,7 +563,7 @@
     // 折叠开关：只切换场景/状态栏的展示高度，不影响注入给模型的场景内容
     function toggleStatusCollapsed(){ state.statusCollapsed = !state.statusCollapsed; saveState(); renderStatus(); }
 
-    function render(){ document.querySelector('.app').dataset.mode = state.mode; document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===state.mode)); const agent=activeAgent(); const p=agent?play():null; if(state.mode==='worldbook'){ $('#chatTitle').textContent='世界书'; $('#chatSubtitle').textContent='多角色 · 事件进展 · 正反派 · 剧情'; } else if(state.mode==='workshop'){ $('#chatTitle').textContent='角色卡工坊'; $('#chatSubtitle').textContent='模板填空 · AI 补全 · 一键导入'; renderShop(); } else if(!agent){ $('#chatAvatar').textContent='✦'; $('#chatTitle').textContent='AI 剧场'; $('#chatSubtitle').textContent='创建你的第一个角色，开始剧情演绎'; } else { if(!p._init){ p._init=true; if(!p.scene) p.scene=agent.initialScene||''; } $('#chatAvatar').textContent=agent.emoji||'✦';$('#chatTitle').textContent=agent.name;$('#chatSubtitle').textContent=agent.relationship||agent.description||'未设置角色关系'; } $('#memoryToggle').checked=state.memory; renderAgents();renderMessages();renderStatus();updateKeyStatus(); }
+    function render(){ document.querySelector('.app').dataset.mode = state.mode; document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===state.mode)); const agent=activeAgent(); const p=agent?play():null; if(state.mode==='worldbook'){ $('#chatTitle').textContent='世界书'; $('#chatSubtitle').textContent='关键词触发 · 兼容酒馆 World Info'; renderWorldbook(); } else if(state.mode==='workshop'){ $('#chatTitle').textContent='角色卡工坊'; $('#chatSubtitle').textContent='模板填空 · AI 补全 · 一键导入'; renderShop(); } else if(!agent){ $('#chatAvatar').textContent='✦'; $('#chatTitle').textContent='AI 剧场'; $('#chatSubtitle').textContent='创建你的第一个角色，开始剧情演绎'; } else { if(!p._init){ p._init=true; if(!p.scene) p.scene=agent.initialScene||''; } $('#chatAvatar').textContent=agent.emoji||'✦';$('#chatTitle').textContent=agent.name;$('#chatSubtitle').textContent=agent.relationship||agent.description||'未设置角色关系'; } $('#memoryToggle').checked=state.memory; renderAgents();renderMessages();renderStatus();updateKeyStatus(); }
 
     function updateKeyStatus(){ const proxy=state.apiBase.startsWith('/'); const ready=!!state.apiKey||(proxy&&state.builtinReady!==false); $('#keyDot').classList.toggle('ready',ready); $('#keyDot').title=state.apiKey?'使用自定义 API Key':(proxy?(state.builtinReady===false?'服务端未配置 MAKERS_MODELS_KEY 环境变量':'使用 EdgeOne Makers 内置模型（无需密钥）'):'未设置 API 密钥'); }
     async function refreshGatewayStatus(){ if(!state.apiBase.startsWith('/')) return; try{ const res=await fetch('/api/status'); if(!res.ok) return; const data=await res.json(); state.builtinReady=!!data.builtin; updateKeyStatus(); }catch{} }
@@ -524,6 +588,13 @@
       if(a.userProfile) blocks.push('【用户（我）的设定】\n'+a.userProfile);
       if(a.initialScene) blocks.push('【剧情初始环境】\n'+a.initialScene);
       if(a.relationship) blocks.push('【与用户的关系】\n'+a.relationship);
+      // 世界书（酒馆 World Info）：常驻条目每轮注入；关键词条目命中最近 8 条消息时注入，按 order 排序
+      const lore=Array.isArray(a.lorebook)?a.lorebook.filter(e=>e&&e.enabled!==false&&String(e.content||'').trim()):[];
+      if(lore.length){
+        const scan=chat().slice(-8).map(m=>m.content||'').join('\n').toLowerCase();
+        const hits=lore.filter(e=>e.constant||(e.keys||[]).some(k=>k&&scan.includes(k.toLowerCase()))).sort((x,y)=>(x.order||0)-(y.order||0));
+        if(hits.length) blocks.push('【世界书设定（由关键词触发的背景资料，作为既定事实使用，不要主动复述或解释）】\n'+hits.map(e=>'・'+String(e.content).trim()).join('\n'));
+      }
       if(p.summaries&&p.summaries.length) blocks.push('【剧情摘要（按时间先后，最早一段在前）】\n'+p.summaries.map((s,i)=>'（第'+(i+1)+'段）'+s).join('\n'));
       if(p.roleState) blocks.push('【角色当前状态】\n'+p.roleState);
       if(p.scene) blocks.push('【当前场景】\n'+p.scene);
@@ -921,23 +992,15 @@
       finally { state.busy = false; $('#sendButton').disabled = false; }
     }
     // ===== 角色卡工坊 =====
-    function shopFieldId(field){ return {name:'shopName',emoji:'shopEmoji',description:'shopDesc',baseDirective:'shopBaseDirective',persona:'shopPersona',userProfile:'shopUserProfile',initialScene:'shopInitialScene',relationship:'shopRelationship'}[field]; }
+    function shopFieldId(field){ return WORKSHOP_FIELDS[field]; }
     function shopReadForm(){
-      return {
-        id: state.shopEditingId || uid(),
-        name: $('#shopName').value.trim(),
-        emoji: $('#shopEmoji').value.trim() || '✦',
-        description: $('#shopDesc').value.trim(),
-        baseDirective: $('#shopBaseDirective').value.trim(),
-        persona: $('#shopPersona').value.trim(),
-        userProfile: $('#shopUserProfile').value.trim(),
-        initialScene: $('#shopInitialScene').value.trim(),
-        relationship: $('#shopRelationship').value.trim()
-      };
+      const card = { id: state.shopEditingId || uid() };
+      Object.keys(WORKSHOP_FIELDS).forEach(f=>{ const el=$('#'+WORKSHOP_FIELDS[f]); card[f] = el ? el.value.trim() : ''; });
+      card.emoji = card.emoji || '✦';
+      return card;
     }
     function shopFillForm(card){
-      const map = {name:'shopName',emoji:'shopEmoji',description:'shopDesc',baseDirective:'shopBaseDirective',persona:'shopPersona',userProfile:'shopUserProfile',initialScene:'shopInitialScene',relationship:'shopRelationship'};
-      Object.entries(map).forEach(([k,id])=>{ const el=$('#'+id); if(el) el.value = card[k]||''; });
+      Object.entries(WORKSHOP_FIELDS).forEach(([k,id])=>{ const el=$('#'+id); if(el) el.value = card[k]||''; });
       $('#shopFormTitle').textContent = card.name ? ('编辑：'+card.name) : '新建角色卡';
     }
     function shopApplyTemplate(tplId){
@@ -1005,15 +1068,15 @@
     function shopExportJson(){
       const card = shopReadForm();
       if(!card.name){ toast('请先填写角色名称'); return; }
-      downloadJson([card], (card.name||'角色卡')+'.json');
-      toast('已导出 JSON');
+      downloadJson([cardToStV2(card)], (card.name||'角色卡')+'.json');
+      toast('已导出酒馆 V2 兼容 JSON');
     }
     function shopExportBatch(){
       const drafts = state.workshopDrafts || [];
       if(!drafts.length){ toast('草稿区为空，请先存草稿'); return; }
       const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-      downloadJson(drafts, '角色卡批量_'+stamp+'.json');
-      toast('已导出 '+drafts.length+' 张草稿');
+      downloadJson(drafts.map(cardToStV2), '角色卡批量_'+stamp+'.json');
+      toast('已导出 '+drafts.length+' 张草稿（酒馆 V2 兼容）');
     }
     function downloadJson(data, filename){
       const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
@@ -1081,6 +1144,96 @@
       return obj;
     }
 
+    // ===== 世界书（Lorebook，对齐酒馆 World Info）=====
+    // 数据模型：agent.lorebook = [{ id, keys:[], content, constant, enabled, order }]
+    // 注入规则见 buildSystem：常驻条目每轮注入；关键词条目命中最近对话时注入，按 order 排序。
+
+    function activeLorebook(){
+      let a = activeAgent();
+      if(!a) return null;
+      if(Array.isArray(a.lorebook)) return a.lorebook;
+      // 内置卡首次写入世界书时先复制为「我的角色」，避免污染服务端下发的模板（与编辑内置卡的行为一致）
+      if(isBuiltinId(a.id) && !state.agents.some(x=>x.id===a.id)){
+        const copy = JSON.parse(JSON.stringify(a));
+        state.agents.push(copy);
+        a = copy;
+      }
+      a.lorebook = [];
+      return a.lorebook;
+    }
+
+    // 酒馆 World Info JSON → 本站条目（兼容 entries 数组 / uid→对象映射两种形态，及 originalData 包裹）
+    function parseStWorldbook(obj){
+      let root = obj;
+      if(root && !root.entries && root.originalData && root.originalData.entries) root = root.originalData;
+      let raw = [];
+      if(root && Array.isArray(root.entries)) raw = root.entries;
+      else if(root && root.entries && typeof root.entries === 'object') raw = Object.values(root.entries);
+      else if(Array.isArray(root)) raw = root;
+      return raw.filter(e=>e && typeof e==='object' && String(e.content||'').trim()).map(e=>({
+        id: uid(),
+        keys: Array.isArray(e.key) ? e.key.map(k=>String(k||'').trim()).filter(Boolean) : (typeof e.key==='string' ? [e.key.trim()].filter(Boolean) : []),
+        content: String(e.content).trim(),
+        constant: !!e.constant,
+        enabled: e.disabled !== true,
+        order: Number.isFinite(Number(e.order)) ? Number(e.order) : 0
+      }));
+    }
+
+    // 本站条目 → 酒馆 World Info JSON（round-trip：本站导出的文件可直接回导酒馆或本站）
+    function lorebookToSt(list){
+      const entries = {};
+      (list||[]).forEach((e,i)=>{
+        entries[String(i)] = { uid:i, key:(e.keys||[]).slice(), keysecondary:[], comment:'', content:e.content||'', constant:!!e.constant, selective:true, order:e.order||0, disabled:e.enabled===false };
+      });
+      return { entries };
+    }
+
+    function renderWorldbook(){
+      const host = $('#wbList'); if(!host) return;
+      const agent = activeAgent();
+      if(!agent){ host.innerHTML = '<div class="wb-empty">还没有角色。<br>请先在左侧创建或选择一个角色，再为其配置世界书。</div>'; return; }
+      const lb = Array.isArray(agent.lorebook) ? agent.lorebook : [];
+      if(!lb.length){ host.innerHTML = '<div class="wb-empty">「'+escapeHtml(agent.name)+'」还没有世界书条目。<br>可导入酒馆（SillyTavern）World Info JSON，或点「＋ 新增条目」手动创建。</div>'; return; }
+      host.innerHTML = lb.map((e,i)=>{
+        const keys = (e.keys&&e.keys.length) ? e.keys.map(k=>'<span class="wb-key'+(e.constant?' always':'')+'">'+escapeHtml(k)+'</span>').join('') : '';
+        const badge = e.constant ? '<span class="wb-key always">常驻</span>' : '';
+        const none = (keys||badge) ? '' : '<span class="wb-key">未设关键词</span>';
+        return '<div class="wb-entry'+(e.enabled===false?' off':'')+'" data-idx="'+i+'"><div class="wb-entry-head"><div class="wb-keys">'+keys+badge+none+'</div><div class="wb-entry-btns"><button data-act="toggle">'+(e.enabled===false?'启用':'停用')+'</button><button data-act="edit">编辑</button><button data-act="del" class="danger">删除</button></div></div><div class="wb-entry-content">'+escapeHtml(e.content||'')+'</div></div>';
+      }).join('');
+      host.querySelectorAll('.wb-entry-content').forEach(el=>{ if(el.scrollHeight > el.clientHeight + 4) el.classList.add('fade'); });
+      host.querySelectorAll('.wb-entry').forEach(el=>{
+        const idx = +el.dataset.idx;
+        el.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+          const lb = activeLorebook(); const e = lb && lb[idx]; if(!e) return;
+          if(b.dataset.act==='toggle'){ e.enabled = e.enabled===false; saveState(); renderWorldbook(); toast(e.enabled===false?'条目已停用':'条目已启用'); }
+          else if(b.dataset.act==='edit'){ openLoreEntryEditor(idx); }
+          else if(b.dataset.act==='del'){ confirmDialog('删除条目','将删除该世界书条目，此操作无法撤销。','删除',()=>{ lb.splice(idx,1); saveState(); closeModal(); renderWorldbook(); toast('条目已删除'); }); }
+        });
+      });
+    }
+
+    function openLoreEntryEditor(idx){
+      const lb = activeLorebook();
+      if(!lb) return toast('请先选择一个角色');
+      const isNew = typeof idx !== 'number';
+      const e = isNew ? {id:uid(),keys:[],content:'',constant:false,enabled:true,order:lb.length} : lb[idx];
+      if(!e) return;
+      openModal(`<h2>${isNew?'新增':'编辑'}世界书条目</h2><p class="hint">当最近对话出现任一关键词时，条目内容会注入系统提示；设为「常驻」则不依赖关键词、每轮注入。</p><div class="form-group"><label>触发关键词 <small>（逗号分隔；留空则必须设为常驻）</small></label><input id="loreKeys" placeholder="例如：雾城, 教堂, 旧怀表" value="${escapeHtml((e.keys||[]).join(', '))}"></div><div class="form-group"><label>条目内容 <small>（世界观、背景、伏笔、设定…）</small></label><textarea id="loreContent" style="min-height:130px" placeholder="当关键词出现时注入给模型的设定资料…">${escapeHtml(e.content||'')}</textarea></div><div class="form-group"><label><input id="loreConstant" type="checkbox" ${e.constant?'checked':''} style="width:auto;margin-right:6px;vertical-align:-2px"> 常驻（不依赖关键词，每轮注入）</label></div><div class="modal-footer"><button class="btn ghost" id="cancel">取消</button><button class="btn primary" id="saveLore">保存条目</button></div>`,()=>{
+        $('#cancel').onclick=closeModal;
+        $('#saveLore').onclick=()=>{
+          const keys=$('#loreKeys').value.split(/[,，;；]+/).map(s=>s.trim()).filter(Boolean);
+          const content=$('#loreContent').value.trim();
+          const constant=$('#loreConstant').checked;
+          if(!content) return toast('请填写条目内容');
+          if(!keys.length && !constant) return toast('未设关键词的条目必须勾选「常驻」，否则永远不会触发');
+          e.keys=keys; e.content=content; e.constant=constant;
+          if(isNew) lb.push(e);
+          saveState(); closeModal(); renderWorldbook(); toast('世界书条目已保存');
+        };
+      });
+    }
+
     function openAgentEditor(agent){
       const edit = !!agent;
       agent = agent || {id:uid(), name:'', emoji:'✦', description:'', baseDirective:'', persona:'', initialScene:'', relationship:'', userProfile:''};
@@ -1117,7 +1270,31 @@
 
     function setMode(mode){ if(mode===state.mode) return; state.mode=mode; saveState(); render(); closeSide(); }
     document.querySelectorAll('#modeSwitch .mode-btn').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
-    document.getElementById('wbBackBtn').onclick = ()=> setMode('rp');
+    // 世界书事件绑定
+    $('#wbAddBtn').onclick = ()=>openLoreEntryEditor();
+    $('#wbImportBtn').onclick = ()=>$('#wbFileInput').click();
+    $('#wbExportBtn').onclick = ()=>{
+      const agent = activeAgent();
+      if(!agent) return toast('请先选择一个角色');
+      const lb = Array.isArray(agent.lorebook) ? agent.lorebook : [];
+      if(!lb.length) return toast('当前角色还没有世界书条目');
+      downloadJson(lorebookToSt(lb), (agent.name||'角色')+'-世界书.json');
+      toast('已导出 '+lb.length+' 条（酒馆 World Info 格式）');
+    };
+    $('#wbFileInput').onchange = async e=>{
+      const file = e.target.files && e.target.files[0];
+      if(!file) return;
+      try{
+        if(file.size > 2*1024*1024){ toast('世界书文件不能超过 2 MB'); return; }
+        const list = parseStWorldbook(JSON.parse(await file.text()));
+        if(!list.length) throw new Error('empty');
+        const lb = activeLorebook();
+        if(!lb){ toast('请先选择一个角色'); return; }
+        lb.push(...list); saveState(); renderWorldbook();
+        toast('已导入 '+list.length+' 条世界书条目');
+      }catch{ toast('导入失败：请使用酒馆（SillyTavern）World Info JSON 文件'); }
+      finally{ e.target.value=''; }
+    };
 
     // 工坊事件绑定
     document.querySelectorAll('.ai-fill-btn[data-fill]').forEach(b=>b.onclick=()=>aiFillCard(b.dataset.fill));
@@ -1136,8 +1313,7 @@
     };
     $('#shopClearForm').onclick = ()=>{
       confirmDialog('清空表单','将清空当前正在编辑的全部字段，从空白重新开始。','清空',()=>{
-        const map = ['shopName','shopEmoji','shopDesc','shopBaseDirective','shopPersona','shopUserProfile','shopInitialScene','shopRelationship'];
-        map.forEach(id=>{ const el=$('#'+id); if(el) el.value=''; });
+        Object.values(WORKSHOP_FIELDS).forEach(id=>{ const el=$('#'+id); if(el) el.value=''; });
         state.shopEditingId = null;
         state.shopActiveTpl = 'blank';
         $('#shopFormTitle').textContent = '新建角色卡';
