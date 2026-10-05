@@ -1,3 +1,8 @@
+// 位置约束：本目录必须位于 functions/ 下（functions/_lib/）。
+// 路由引用按目录深度写相对路径：functions/api/x.js → ../_lib/x.js；
+// functions/api/<sub>/x.js → ../../_lib/x.js。打包器不解析 workspace 根的 tsconfig paths，
+// 也不跟随一级目录之外的软链，路径写错会在部署构建时报 Could not resolve。
+
 // 边缘函数共享库：环境变量统一读取（唯一定义，各路由不再各自克隆）
 // 读取优先级：context.env → 以全局常量形式注入的变量（EdgeOne Pages 两种注入形态都兼容）。
 // 涉及的配置：

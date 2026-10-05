@@ -8,8 +8,8 @@
 // 此时前端应引导用户手动填写模型名，内置模型清单由前端 BUILTIN_MODELS 维护。
 // 同样不返回 CORS 头，仅允许本站页面调用，避免平台密钥被第三方站点盗刷。
 
-import { platformKey } from '../../_lib/env.js';
-import { jsonResponse } from '../../_lib/http.js';
+import { platformKey } from '../_lib/env.js';
+import { jsonResponse } from '../_lib/http.js';
 
 const DEFAULT_BASE = 'https://ai-gateway.edgeone.link/v1';
 
