@@ -6,25 +6,13 @@
 // - BYOK：请求自带 Authorization: Bearer <key> 时优先使用请求中的密钥
 // - SSE 流式响应原样透传（ReadableStream 直传）
 // - 安全：仅接受 application/json 请求、不输出 CORS 头，防止其他网站跨站盗刷平台密钥
-// - 便捷：模型名不带 "/" 时自动补 @makers/ 前缀（如 hy3 -> @makers/hy3）；
-//         带 "/" 的按 provider/model 原样透传（如 openai/gpt-5），用于绑定自费厂商密钥后调用任意模型
+// - 便捷：模型名归一化与密钥读取分别复用 _lib/model-name.js 与 _lib/env.js（唯一定义）
+
+import { platformKey } from '../../_lib/env.js';
+import { jsonResponse } from '../../_lib/http.js';
+import { applyModelPrefix } from '../../_lib/model-name.js';
 
 const UPSTREAM = 'https://ai-gateway.edgeone.link/v1/chat/completions';
-
-function json(obj, status) {
-  return new Response(JSON.stringify(obj), {
-    status,
-    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
-  });
-}
-
-function platformKey(env) {
-  const fromContext = env && env.MAKERS_MODELS_KEY;
-  if (fromContext) return String(fromContext).trim();
-  // 兼容以全局变量形式注入的环境变量
-  if (typeof MAKERS_MODELS_KEY !== 'undefined') return String(MAKERS_MODELS_KEY).trim();
-  return '';
-}
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -33,26 +21,23 @@ export async function onRequest(context) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204 });
 
   if (request.method !== 'POST') {
-    return json({ error: { message: 'Method Not Allowed' } }, 405);
+    return jsonResponse({ error: { message: 'Method Not Allowed' } }, 405);
   }
 
   const contentType = request.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
-    return json({ error: { message: '仅接受 application/json 请求' } }, 415);
+    return jsonResponse({ error: { message: '仅接受 application/json 请求' } }, 415);
   }
 
   let payload;
   try {
     payload = JSON.parse(await request.text());
   } catch {
-    return json({ error: { message: '请求体不是有效的 JSON' } }, 400);
+    return jsonResponse({ error: { message: '请求体不是有效的 JSON' } }, 400);
   }
 
   // 模型名便捷归一化：经代理调用时允许省略 @makers/ 前缀
-  if (payload && typeof payload.model === 'string' && payload.model && !payload.model.includes('/')) {
-    const bare = payload.model.replace(/^@?makers-?/, '');
-    payload.model = '@makers/' + (bare || payload.model);
-  }
+  applyModelPrefix(payload);
 
   // 密钥优先级：请求自带（BYOK） > 平台环境变量
   const auth = request.headers.get('authorization') || '';
@@ -60,7 +45,7 @@ export async function onRequest(context) {
   const apiKey = userKey || platformKey(env);
 
   if (!apiKey) {
-    return json({ error: { message: '服务端未配置 MAKERS_MODELS_KEY 环境变量（EdgeOne Pages 项目设置 → 环境变量，添加后需重新部署）；或在页面设置中填写你自己的 API Key。' } }, 401);
+    return jsonResponse({ error: { message: '服务端未配置 MAKERS_MODELS_KEY 环境变量（EdgeOne Pages 项目设置 → 环境变量，添加后需重新部署）；或在页面设置中填写你自己的 API Key。' } }, 401);
   }
 
   let upstream;
@@ -74,7 +59,7 @@ export async function onRequest(context) {
       body: JSON.stringify(payload),
     });
   } catch (e) {
-    return json({ error: { message: '无法连接 Makers Models 网关：' + (e && e.message ? e.message : 'network error') } }, 502);
+    return jsonResponse({ error: { message: '无法连接 Makers Models 网关：' + (e && e.message ? e.message : 'network error') } }, 502);
   }
 
   const headers = { 'cache-control': 'no-store' };

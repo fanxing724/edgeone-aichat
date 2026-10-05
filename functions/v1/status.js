@@ -5,20 +5,7 @@
 // - proxy   PROXY_ACCESS_KEYS 是否已配置（否则 /v1/* 一律 503）
 // - gateway MAKERS_MODELS_KEY 是否已配置（否则无法调用上游）
 
-function platformKey(env) {
-  const fromContext = env && env.MAKERS_MODELS_KEY;
-  if (fromContext) return String(fromContext).trim();
-  if (typeof MAKERS_MODELS_KEY !== 'undefined' && MAKERS_MODELS_KEY) return String(MAKERS_MODELS_KEY).trim();
-  return '';
-}
-
-function hasAccessKeys(env) {
-  const fromContext = env && (env.PROXY_ACCESS_KEYS || env.PROXY_ACCESS_KEY);
-  if (fromContext && String(fromContext).trim()) return true;
-  if (typeof PROXY_ACCESS_KEYS !== 'undefined' && String(PROXY_ACCESS_KEYS || '').trim()) return true;
-  if (typeof PROXY_ACCESS_KEY !== 'undefined' && String(PROXY_ACCESS_KEY || '').trim()) return true;
-  return false;
-}
+import { platformKey, hasAccessKeys } from '../../_lib/env.js';
 
 export function onRequest(context) {
   const { request, env } = context;
