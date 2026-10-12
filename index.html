@@ -303,10 +303,17 @@
       if(changed){ try{ saveState(); }catch{} }
     }
 
-    const state = {agents:[], activeId:'hatsune-miku', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'/api', model:'@makers/deepseek-v4-flash', builtinReady:null, builtinCards:[], hiddenBuiltins:[], modelList:[], thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, aborter:null, attachment:null, mode:'rp', workshopDrafts:[], shopActiveTpl:null, shopEditingId:null, statusCollapsed:false};
+    const state = {agents:[], activeId:'hatsune-miku', chats:{}, play:{}, globalPrompt:'', apiKey:'', apiBase:'/api', model:'@makers/deepseek-v4-flash', builtinReady:null, cfReady:null, builtinCards:[], hiddenBuiltins:[], modelList:[], thinking:'off', temperature:1.3, topP:0.9, antiRepeat:true, repeatThreshold:0.55, memory:true, busy:false, aborter:null, attachment:null, mode:'rp', workshopDrafts:[], shopActiveTpl:null, shopEditingId:null, statusCollapsed:false};
     // 网关内置免费模型（平台侧不提供 /models 接口，故在此维护；绑定自有厂商密钥后可用 provider/model 形式调用任意模型）
     const BUILTIN_MODELS = ['@makers/deepseek-v4-flash','@makers/deepseek-v4-pro','@makers/hy3','@makers/hy3-preview','@makers/minimax-m2.7','@makers/minimax-m3','@makers/kimi-k2.6'];
     const DEFAULT_MODEL = '@makers/deepseek-v4-flash';
+    // 第二路内置后端：Cloudflare Workers AI（/api/cf/run，原生协议）。服务端可用环境变量 CF_MODELS 覆盖此清单。
+    // 已在 Workers Free 套餐实测可用的两个纯 instruct 模型（不含 <think> 思考块，适合剧情演绎）
+    const CF_MODELS = ['@cf/meta/llama-3.3-70b-instruct-fp8-fast','@cf/mistralai/mistral-small-3.1-24b-instruct'];
+    const DEFAULT_CF_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+    // @cf/ 与 @hf/ 走 Workers AI 原生协议，其余走 Makers 网关的 OpenAI 兼容协议
+    function isCfModel(id){ return typeof id==='string' && /^@(cf|hf)\//i.test(id.trim()); }
+    function usingCf(){ return isCfModel(state.model); }
 
     // 角色卡工坊模板：骨架字段，灌入表单作起点；占位符供 AI 补全识别上下文
     const WORKSHOP_TEMPLATES = [
@@ -403,7 +410,8 @@
       const list = allAgents();
       if(!list.some(a=>a.id===state.activeId)) state.activeId = list[0]?.id || '';
     }
-    function apiEndpoint(){ let base=(state.apiBase||'/api').trim().replace(/\/+$/,''); if(/\/chat\/completions$/i.test(base)) return base; return base+'/chat/completions'; }
+    // 端点分流：@cf/ 模型走 Workers AI 原生路由 /api/cf/run，其余走 OpenAI 兼容的 /chat/completions
+    function apiEndpoint(){ if(usingCf()) return '/api/cf/run'; let base=(state.apiBase||'/api').trim().replace(/\/+$/,''); if(/\/chat\/completions$/i.test(base)) return base; return base+'/chat/completions'; }
     function chat(){ if(!Array.isArray(state.chats[state.activeId])) state.chats[state.activeId]=[]; return state.chats[state.activeId]; }
     function play(){ if(!state.play) state.play={}; if(!state.play[state.activeId]) state.play[state.activeId]={roleState:'',scene:'',summaries:[],summarizedUpTo:0}; const p=state.play[state.activeId]; if(typeof p.summary==='string'&&p.summary){ if(!Array.isArray(p.summaries)||!p.summaries.length) p.summaries=[p.summary]; delete p.summary; } if(!Array.isArray(p.summaries)) p.summaries=[]; return p; }
     function escapeHtml(text){ return String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
@@ -568,8 +576,27 @@
 
     function render(){ document.querySelector('.app').dataset.mode = state.mode; document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===state.mode)); const agent=activeAgent(); const p=agent?play():null; if(state.mode==='worldbook'){ $('#chatTitle').textContent='世界书'; $('#chatSubtitle').textContent='关键词触发 · 兼容酒馆 World Info'; renderWorldbook(); } else if(state.mode==='workshop'){ $('#chatTitle').textContent='角色卡工坊'; $('#chatSubtitle').textContent='模板填空 · AI 补全 · 一键导入'; renderShop(); } else if(!agent){ $('#chatAvatar').textContent='✦'; $('#chatTitle').textContent='AI 剧场'; $('#chatSubtitle').textContent='创建你的第一个角色，开始剧情演绎'; } else { if(!p._init){ p._init=true; if(!p.scene) p.scene=agent.initialScene||''; } $('#chatAvatar').textContent=agent.emoji||'✦';$('#chatTitle').textContent=agent.name;$('#chatSubtitle').textContent=agent.relationship||agent.description||'未设置角色关系'; } $('#memoryToggle').checked=state.memory; renderAgents();renderMessages();renderStatus();updateKeyStatus(); }
 
-    function updateKeyStatus(){ const proxy=state.apiBase.startsWith('/'); const ready=!!state.apiKey||(proxy&&state.builtinReady!==false); $('#keyDot').classList.toggle('ready',ready); $('#keyDot').title=state.apiKey?'使用自定义 API Key':(proxy?(state.builtinReady===false?'服务端未配置 MAKERS_MODELS_KEY 环境变量':'使用 EdgeOne Makers 内置模型（无需密钥）'):'未设置 API 密钥'); }
-    async function refreshGatewayStatus(){ if(!state.apiBase.startsWith('/')) return; try{ const res=await fetch('/api/status'); if(!res.ok) return; const data=await res.json(); state.builtinReady=!!data.builtin; updateKeyStatus(); }catch{} }
+    function updateKeyStatus(){
+      const proxy=state.apiBase.startsWith('/');
+      const cf=usingCf();
+      const ready = state.apiKey ? true : (!proxy ? false : (cf ? state.cfReady!==false : state.builtinReady!==false));
+      $('#keyDot').classList.toggle('ready',ready);
+      $('#keyDot').title = state.apiKey ? '使用自定义 API Key'
+        : !proxy ? '未设置 API 密钥'
+        : cf ? (state.cfReady===false?'服务端未配置 CF_ACCOUNT_ID / CF_API_TOKEN，Cloudflare 模型暂不可用':'使用 Cloudflare Workers AI 内置模型（无需密钥）')
+        : (state.builtinReady===false?'服务端未配置 MAKERS_MODELS_KEY 环境变量':'使用 EdgeOne Makers 内置模型（无需密钥）');
+    }
+    async function refreshGatewayStatus(){ if(!state.apiBase.startsWith('/')) return; try{ const res=await fetch('/api/status'); if(!res.ok) return; const data=await res.json(); state.builtinReady=!!data.builtin; state.cfReady=!!data.cloudflare; updateKeyStatus(); }catch{} }
+
+    // 调用前的可用性检查：自定义 API 必须自带密钥；内置后端按所选模型检查对应环境变量是否已配置
+    function ensureReady(){
+      if(state.apiKey) return true;
+      if(!state.apiBase.startsWith('/')){ openSettings(); toast('请先设置 API 密钥，或将 API 地址设为 /api 使用内置模型'); return false; }
+      if(state.cfReady===null) refreshGatewayStatus();
+      if(usingCf() && state.cfReady===false){ openSettings(); toast('服务端未配置 CF_ACCOUNT_ID / CF_API_TOKEN，Cloudflare 模型暂不可用，请改用 @makers/ 模型或自定义 API'); return false; }
+      if(!usingCf() && state.builtinReady===false){ openSettings(); toast('服务端未配置 MAKERS_MODELS_KEY 环境变量，内置模型暂不可用'); return false; }
+      return true;
+    }
 
     function toast(msg){ const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),2600); }
 
@@ -616,10 +643,12 @@
     // key = apiBase + '|' + model，切换 API 或模型后各自独立记忆（会话级，不落 localStorage）
     const thinkingUnsupported = new Set();
     function thinkingKey(){ return (state.apiBase||'/api')+'|'+(state.model||''); }
-    function modelSupportsThinking(){ return state.thinking !== 'off' && !thinkingUnsupported.has(thinkingKey()); }
+    // Workers AI 原生协议没有 thinking/reasoning_effort，思考模式对它不生效
+    function modelSupportsThinking(){ return !usingCf() && state.thinking !== 'off' && !thinkingUnsupported.has(thinkingKey()); }
 
-    // forceOff=true 时无视 state.thinking，按「关闭思考」构造参数（用于 400 降级重试）
-    function buildPayload(extraUserNote, forceOff){
+    // 构造请求体：@cf/ 模型用 Workers AI 原生格式，其余用 OpenAI 兼容格式
+    function buildRequest(extraUserNote, opts){
+      const o = opts || {};
       const history = chat().filter(m=>m.id!=='thinking');
       const messages = [];
       const system = buildSystem();
@@ -627,7 +656,18 @@
       const context = state.memory ? history.slice(-12) : history.slice(-1);
       context.forEach(m=>messages.push({role:m.role, content:m.content}));
       if(extraUserNote) messages.push({role:'user', content:extraUserNote});
-      const payload = { model: state.model, messages, stream: true, max_tokens: 8192 };
+      if(usingCf()){
+        // 原生格式：只带 Workers AI 认识的字段（不支持 top_p），输出长度受模型上限约束
+        return { model: state.model, messages, stream: !!o.stream, max_tokens: o.maxTokens || 2048, temperature: Number(state.temperature ?? 1.3) };
+      }
+      const payload = { model: state.model, messages, stream: !!o.stream, max_tokens: o.maxTokens || 8192 };
+      return payload;
+    }
+
+    // forceOff=true 时无视 state.thinking，按「关闭思考」构造参数（用于 400 降级重试）
+    function buildPayload(extraUserNote, forceOff){
+      const payload = buildRequest(extraUserNote, { stream: true });
+      if(usingCf()) return payload;
       const useThinking = !forceOff && modelSupportsThinking();
       if(!useThinking){
         payload.temperature = Number(state.temperature ?? 1.3);
@@ -637,6 +677,40 @@
         payload.reasoning_effort = state.thinking === 'max' ? 'high' : state.thinking;
       }
       return payload;
+    }
+
+    // 非对话场景（开场白 / 剧情摘要 / 工坊补全）用显式 messages 构造请求体
+    function buildRawRequest(messages, opts){
+      const o = opts || {};
+      const maxTokens = o.maxTokens || 2000;
+      const temperature = Number(o.temperature ?? state.temperature ?? 1.3);
+      if(usingCf()) return { model: state.model, messages, stream: false, max_tokens: Math.min(maxTokens, 2048), temperature };
+      const payload = { model: state.model, messages, stream: false, max_tokens: maxTokens, temperature, top_p: Number(state.topP ?? 0.9) };
+      if(modelSupportsThinking()){
+        delete payload.temperature; delete payload.top_p;
+        payload.thinking = { type:'enabled' };
+        payload.reasoning_effort = state.thinking === 'max' ? 'high' : state.thinking;
+      }
+      return payload;
+    }
+
+    // 响应解析：按当前后端协议取出文本
+    // - Workers AI：非流式 result.response（实测同时提供 result.choices[0].message.content）；
+    //   流式分片 json.response（实测与 choices[0].delta.content 内容一致）。两个来源都兜底，防止个别模型只给一种。
+    // - OpenAI 兼容：choices[0].message.content / choices[0].delta.content
+    function extractText(data){
+      if(usingCf()){
+        const v = data?.result?.response ?? data?.response ?? data?.result?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.message?.content;
+        return String(v ?? '');
+      }
+      return String(data?.choices?.[0]?.message?.content ?? '');
+    }
+    function extractDelta(json){
+      if(usingCf()){
+        if(typeof json?.response === 'string' && json.response) return json.response;
+        return String(json?.choices?.[0]?.delta?.content ?? '');
+      }
+      return String(json?.choices?.[0]?.delta?.content ?? '');
     }
 
     // 剥离思考相关参数，改回普通采样参数（400 降级时复用）
@@ -654,7 +728,7 @@
 
     async function streamChat(payload, onDelta){
       const reqHeaders = {'Content-Type':'application/json'};
-      if(state.apiKey) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
+      if(state.apiKey && !usingCf()) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
       const ctrl = new AbortController();
       state.aborter = ctrl;                       // 供“停止”按钮 / 卸载时取消
       let firstByteTimer = setTimeout(()=>ctrl.abort(new Error('timeout')), STREAM_FIRST_BYTE_TIMEOUT);
@@ -679,7 +753,7 @@
         clearTimer();   // 已拿到响应头，取消首字节超时；后续按 chunk 刷新看门狗
         if(!res.body){
           const data = await res.json();
-          const content = data.choices?.[0]?.message?.content;
+          const content = extractText(data);
           if(!content) throw new Error('API 未返回可用内容');
           onDelta(content);
           return content;
@@ -704,8 +778,8 @@
             const data = s.slice(5).trim();
             if(data === '[DONE]') continue;
             let json; try { json = JSON.parse(data); } catch { continue; }
-            const delta = json.choices?.[0]?.delta || {};
-            if(delta.content){ content += delta.content; onDelta(content); }
+            const piece = extractDelta(json);
+            if(piece){ content += piece; onDelta(content); }
           }
         }
         clearTimeout(idleTimer);
@@ -742,22 +816,20 @@
       if(state.busy) return;
       const agent = activeAgent();
       if(!agent){ openAgentEditor(); toast('请先创建一个角色'); return; }
-      if(!state.apiKey && !state.apiBase.startsWith('/')){ openSettings(); toast('请先设置 API 密钥，或将 API 地址设为 /api 使用内置模型'); return; }
+      if(!ensureReady()) return;
       if(chat().length) return;   // 仅空对话时可用
       state.busy = true; setSendButtonMode(true);
       toast('正在生成开场白…');
       const reqHeaders = {'Content-Type':'application/json'};
-      if(state.apiKey) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
+      if(state.apiKey && !usingCf()) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
       const instruction = '现在请你以该角色的身份，为这场剧情写下开场：交代你所处的场景与当下状态，用一句符合人设的话或动作向对话人打开局面。严格遵循输出格式约定（【状态】单独一行、动作用 *星号*、台词用双引号）。只输出开场内容本身，不要任何解释或前缀。';
-      const payload = { model: state.model, messages:[{role:'system', content: buildSystem()},{role:'user', content: instruction}], stream:false, max_tokens:1200 };
-      if(modelSupportsThinking()){ payload.thinking={type:'enabled'}; payload.reasoning_effort = state.thinking==='max'?'high':state.thinking; }
-      else { payload.temperature = Number(state.temperature ?? 1.3); payload.top_p = Number(state.topP ?? 0.9); }
+      const payload = buildRawRequest([{role:'system', content: buildSystem()},{role:'user', content: instruction}], { maxTokens: 1200 });
       try {
         let res = await fetch(apiEndpoint(), { method:'POST', headers:reqHeaders, body: JSON.stringify(payload) });
         if(res.status===400 && payload.thinking){ thinkingUnsupported.add(thinkingKey()); delete payload.thinking; delete payload.reasoning_effort; payload.temperature=Number(state.temperature??1.3); payload.top_p=Number(state.topP??0.9); res = await fetch(apiEndpoint(), { method:'POST', headers:reqHeaders, body: JSON.stringify(payload) }); }
         if(!res.ok){ let d=''; try{ d=(await res.json()).error?.message||''; }catch{} throw new Error(res.status+' '+d); }
         const data = await res.json();
-        const text = (data.choices?.[0]?.message?.content||'').trim();
+        const text = extractText(data).trim();
         if(!text) throw new Error('API 未返回开场白');
         const parsed = parseReply(text);
         const p = play();
@@ -776,7 +848,7 @@
       if(!activeAgent()){ openAgentEditor(); toast('请先创建一个角色，再开始剧情演绎'); return; }
       const attachment = state.attachment;
       if((!text && !attachment) || state.busy) return;
-      if(!state.apiKey && !state.apiBase.startsWith('/')){ openSettings(); toast('请先设置 API 密钥，或将 API 地址设为 /api 使用内置模型'); return; }
+      if(!ensureReady()) return;
       const messages = chat();
       let userRepeatNote = '';
       if(!regenerate){
@@ -878,13 +950,20 @@
       const topP = Number(state.topP ?? 0.9);
       const draft = { builtin: state.apiBase.startsWith('/') && !state.apiKey };
       const currentModel = state.model || DEFAULT_MODEL;
+      // 内置模式 = Makers 分组 + Cloudflare Workers AI 分组 + 用户手填过的模型；自定义模式只用拉取到的清单
+      const builtinList = ()=>[...BUILTIN_MODELS, ...CF_MODELS, ...state.modelList.filter(id=>!BUILTIN_MODELS.includes(id)&&!CF_MODELS.includes(id))];
+      const listFor = ()=> draft.builtin ? builtinList() : state.modelList;
       const modelOptions = (list, current)=>{
         const ids = []; if(current) ids.push(current); (list||[]).forEach(id=>{ if(id && !ids.includes(id)) ids.push(id); });
         if(!ids.length) ids.push(DEFAULT_MODEL);
-        return ids.map(id=>'<option value="'+escapeHtml(id)+'"'+(id===current?' selected':'')+'>'+escapeHtml(id)+'</option>').join('');
+        const opt = id=>'<option value="'+escapeHtml(id)+'"'+(id===current?' selected':'')+'>'+escapeHtml(id)+'</option>';
+        const group = (label, pred)=>{ const arr=ids.filter(pred); return arr.length ? '<optgroup label="'+label+'">'+arr.map(opt).join('')+'</optgroup>' : ''; };
+        return group('EdgeOne Makers 内置', id=>id.startsWith('@makers/'))
+             + group('Cloudflare Workers AI', id=>isCfModel(id))
+             + group('我的模型', id=>!id.startsWith('@makers/') && !isCfModel(id));
       };
-      const refreshSelect = (keep)=>{ const sel=$('#modelInput'); if(!sel) return; const list=draft.builtin?(state.modelList.length?state.modelList:BUILTIN_MODELS):state.modelList; const cur=keep||sel.value; sel.innerHTML=modelOptions(list, list.includes(cur)?cur:(list[0]||cur)); };
-      openModal(`<h2>API 设置</h2><p class="hint">内置模型开箱即用；有特殊需求可切换到自己的 API。</p><div class="privacy-card"><span>🔒</span><div><b>API 地址与 Key 只保存在你自己的浏览器</b>它们仅存于本机 localStorage，不会上传到本站服务器，也不会出现在任何请求日志里。使用内置模型时，平台密钥保存在服务端环境变量中，前端全程接触不到。</div></div><div class="seg-tabs"><button type="button" class="seg-tab ${draft.builtin?'active':''}" data-tab="builtin">内置 API</button><button type="button" class="seg-tab ${draft.builtin?'':'active'}" data-tab="custom">自定义 API</button></div><div class="tab-panel" id="panelBuiltin"${draft.builtin?'':' hidden'}><div class="status-card">● ${state.builtinReady===false?'⚠ 服务端未配置 MAKERS_MODELS_KEY，内置模型暂不可用，请改用自定义 API':'未设置密钥 · 经本站边缘节点调用内置模型，开箱即用'}</div></div><div class="tab-panel" id="panelCustom"${draft.builtin?' hidden':''}><div class="form-group"><label>API 地址</label><input id="apiBaseInput" type="text" placeholder="https://api.openai.com/v1" value="${escapeHtml(draft.builtin?'':state.apiBase)}"><div class="form-note">任意 OpenAI 兼容地址（官方、中转、自建均可），会自动补全 /chat/completions。模型名需与该服务匹配，如 provider/model 形式。</div></div><div class="form-group"><label>API Key</label><div class="key-input"><input id="apiKeyInput" type="password" placeholder="sk-…" value="${escapeHtml(state.apiKey)}"><button type="button" id="toggleKey" title="显示或隐藏密钥">◉</button></div></div></div><div class="form-group"><label>模型</label><div class="model-picker"><select id="modelInput">${modelOptions(state.modelList, currentModel)}</select><button type="button" id="fetchModels">获取列表</button><button type="button" id="manualModel" title="手动填写模型名">✎</button></div><div class="form-note">内置模式直接载入可选模型；自定义模式点「获取列表」从你的 API 拉取，若该服务不支持列表接口可点 ✎ 手填。</div></div><details class="adv"><summary>高级演绎参数</summary><div class="form-group"><label>思考模式</label><select id="thinkingInput">${thinkOpts}</select><div class="form-note">关闭思考后回复最快、最不易重复；思考模式会让模型先推理再回答，但更容易出现重复与套话。</div></div><div class="form-group"><label>随机性 temperature <small id="tempVal">${temp}</small></label><input id="tempInput" type="range" min="0" max="2" step="0.1" value="${temp}"><div class="form-note">越高越有创意、越不易重复（仅关闭思考时生效）。角色演绎建议 1.2～1.5。</div></div><div class="form-group"><label>采样范围 top_p <small id="topPVal">${topP}</small></label><input id="topPInput" type="range" min="0" max="1" step="0.05" value="${topP}"><div class="form-note">配合 temperature 使用，建议 0.85～0.95。</div></div><div class="form-group"><label><input id="antiRepeatInput" type="checkbox" ${state.antiRepeat?'checked':''} style="width:auto;margin-right:6px;vertical-align:-2px"> 自动检测并抑制重复内容</label><div class="form-note">当回复与历史高度相似时，自动换角度重新生成一次。</div></div><div class="form-group"><label>全局底层提示词 <small>（对全部智能体生效）</small></label><textarea id="globalPrompt" placeholder="例如：始终使用简洁、准确的中文回答…">${escapeHtml(state.globalPrompt)}</textarea></div></details><div class="modal-footer"><button class="btn ghost" id="cancel">取消</button><button class="btn primary" id="saveSettings">保存设置</button></div>`,()=>{
+      const refreshSelect = (keep)=>{ const sel=$('#modelInput'); if(!sel) return; const list=listFor(); const cur=keep||sel.value; sel.innerHTML=modelOptions(list, list.includes(cur)?cur:(list[0]||cur)); };
+      openModal(`<h2>API 设置</h2><p class="hint">两路内置后端开箱即用：<b>@makers/</b> 走 EdgeOne Makers 网关，<b>@cf/</b> 走 Cloudflare Workers AI（原生协议）；有特殊需求可切换到自己的 OpenAI 兼容 API。</p><div class="privacy-card"><span>🔒</span><div><b>API 地址与 Key 只保存在你自己的浏览器</b>它们仅存于本机 localStorage，不会上传到本站服务器，也不会出现在任何请求日志里。使用内置模型时，平台密钥保存在服务端环境变量中，前端全程接触不到。</div></div><div class="seg-tabs"><button type="button" class="seg-tab ${draft.builtin?'active':''}" data-tab="builtin">内置 API</button><button type="button" class="seg-tab ${draft.builtin?'':'active'}" data-tab="custom">自定义 API</button></div><div class="tab-panel" id="panelBuiltin"${draft.builtin?'':' hidden'}><div class="status-card">● EdgeOne Makers（@makers/）：${state.builtinReady===false?'⚠ 服务端未配置 MAKERS_MODELS_KEY，暂不可用':'可用 · 无需密钥'}</div><div class="status-card">● Cloudflare Workers AI（@cf/）：${state.cfReady===false?'⚠ 服务端未配置 CF_ACCOUNT_ID / CF_API_TOKEN，暂不可用':'可用 · 无需密钥'}</div></div><div class="tab-panel" id="panelCustom"${draft.builtin?' hidden':''}><div class="form-group"><label>API 地址</label><input id="apiBaseInput" type="text" placeholder="https://api.openai.com/v1" value="${escapeHtml(draft.builtin?'':state.apiBase)}"><div class="form-note">任意 OpenAI 兼容地址（官方、中转、自建均可），会自动补全 /chat/completions。模型名需与该服务匹配，如 provider/model 形式。</div></div><div class="form-group"><label>API Key</label><div class="key-input"><input id="apiKeyInput" type="password" placeholder="sk-…" value="${escapeHtml(state.apiKey)}"><button type="button" id="toggleKey" title="显示或隐藏密钥">◉</button></div></div></div><div class="form-group"><label>模型</label><div class="model-picker"><select id="modelInput">${modelOptions(listFor(), currentModel)}</select><button type="button" id="fetchModels">获取列表</button><button type="button" id="manualModel" title="手动填写模型名">✎</button></div><div class="form-note">内置模式直接载入可选模型；自定义模式点「获取列表」从你的 API 拉取，若该服务不支持列表接口可点 ✎ 手填。</div></div><details class="adv"><summary>高级演绎参数</summary><div class="form-group"><label>思考模式</label><select id="thinkingInput">${thinkOpts}</select><div class="form-note">关闭思考后回复最快、最不易重复；思考模式会让模型先推理再回答，但更容易出现重复与套话。</div></div><div class="form-group"><label>随机性 temperature <small id="tempVal">${temp}</small></label><input id="tempInput" type="range" min="0" max="2" step="0.1" value="${temp}"><div class="form-note">越高越有创意、越不易重复（仅关闭思考时生效）。角色演绎建议 1.2～1.5。</div></div><div class="form-group"><label>采样范围 top_p <small id="topPVal">${topP}</small></label><input id="topPInput" type="range" min="0" max="1" step="0.05" value="${topP}"><div class="form-note">配合 temperature 使用，建议 0.85～0.95。</div></div><div class="form-group"><label><input id="antiRepeatInput" type="checkbox" ${state.antiRepeat?'checked':''} style="width:auto;margin-right:6px;vertical-align:-2px"> 自动检测并抑制重复内容</label><div class="form-note">当回复与历史高度相似时，自动换角度重新生成一次。</div></div><div class="form-group"><label>全局底层提示词 <small>（对全部智能体生效）</small></label><textarea id="globalPrompt" placeholder="例如：始终使用简洁、准确的中文回答…">${escapeHtml(state.globalPrompt)}</textarea></div></details><div class="modal-footer"><button class="btn ghost" id="cancel">取消</button><button class="btn primary" id="saveSettings">保存设置</button></div>`,()=>{
         const tabs=document.querySelectorAll('.seg-tab');
         const setTab=(builtin)=>{ draft.builtin=builtin; tabs.forEach(b=>b.classList.toggle('active',(b.dataset.tab==='builtin')===builtin)); $('#panelBuiltin').hidden=!builtin; $('#panelCustom').hidden=builtin; refreshSelect(); };
         tabs.forEach(b=>b.onclick=()=>setTab(b.dataset.tab==='builtin'));
@@ -896,7 +975,7 @@
         $('#fetchModels').onclick=async()=>{
           const btn=$('#fetchModels'); btn.disabled=true; btn.textContent='获取中…';
           try{
-            if(draft.builtin){ state.modelList=[...BUILTIN_MODELS]; saveState(); refreshSelect(); toast('已载入 '+BUILTIN_MODELS.length+' 个内置模型，请选择'); return; }
+            if(draft.builtin){ state.modelList=[...BUILTIN_MODELS, ...CF_MODELS]; saveState(); refreshSelect(); toast('已载入 '+(BUILTIN_MODELS.length+CF_MODELS.length)+' 个内置模型，请选择'); return; }
             const base = $('#apiBaseInput').value.trim();
             const key = $('#apiKeyInput').value.trim();
             if(!base){ toast('请先填写 API 地址'); return; }
@@ -945,13 +1024,13 @@
       if(existing && existing.length) input += '【已有的剧情摘要】\n'+existing.join('\n---\n')+'\n\n';
       input += '【新增对话内容】\n'+segmentText;
       messages.push({role:'user', content:input});
-      const payload = { model:state.model, messages, stream:false, max_tokens:2500, temperature:0.4 };
+      const payload = buildRawRequest(messages, { maxTokens: 2500, temperature: 0.4 });
       const reqHeaders = {'Content-Type':'application/json'};
-      if(state.apiKey) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
+      if(state.apiKey && !usingCf()) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
       const res = await fetch(apiEndpoint(), { method:'POST', headers:reqHeaders, body:JSON.stringify(payload) });
       if(!res.ok){ let d=''; try{d=(await res.json()).error?.message||''}catch{} throw new Error(res.status+' '+d); }
       const data = await res.json();
-      const text = data.choices?.[0]?.message?.content;
+      const text = extractText(data);
       if(!text) throw new Error('API 未返回摘要');
       return text.trim();
     }
@@ -985,7 +1064,7 @@
       const list = chat();
       if(list.length < 4) return toast('对话还太少，暂不需要生成摘要');
       if(state.busy || state.summarizing) return;
-      if(!state.apiKey && !state.apiBase.startsWith('/')){ openSettings(); toast('请先设置 API 密钥，或将 API 地址设为 /api 使用内置模型'); return; }
+      if(!ensureReady()) return;
       state.busy = true; $('#sendButton').disabled = true;
       toast('正在生成剧情摘要…');
       try {
@@ -1092,7 +1171,7 @@
     }
     async function aiFillCard(targetField){
       if(state.busy) return;
-      if(!state.apiKey && !state.apiBase.startsWith('/')){ toast('请先在 API 设置中配置密钥，或使用内置模型'); openSettings(); return; }
+      if(!ensureReady()) return;
       const card = shopReadForm();
       if(!card.name && targetField !== 'name'){ toast('请先填写角色名称，AI 才能补全其余字段'); $('#shopName').focus(); return; }
       const fields = targetField ? [targetField] : ['name','emoji','description','baseDirective','persona','userProfile','initialScene','relationship'];
@@ -1124,13 +1203,13 @@
     async function callAiFillCard(card, fields){
       const sys = '你是角色卡设计师。根据用户已填的字段，为指定的空缺字段补全内容，输出严格的 JSON。\n\n【硬性要求】\n1. 只输出一个 JSON 对象，键为字段名，值为字符串；不要任何解释、注释、markdown 代码块。\n2. 字段含义：name=角色名(≤12字)、emoji=单个 emoji、description=一句话简介(≤30字)、baseDirective=底层输出设定(语气风格/绝对禁止的事/必须遵守的规范,≤200字)、persona=角色人设(核心性格/说话方式/目标/秘密,分点写,≤350字)、userProfile=用户身份设定(≤150字)、initialScene=剧情初始环境(地点/时间/天气/气氛/正在发生的事,≤180字)、relationship=用户与角色的关系(≤50字)。\n3. 已填字段保持不动，只补全空缺字段；语气与已填内容保持一致。\n4. 内容要具体、有细节、能直接用于角色扮演，禁止空泛套话。';
       const input = '【已填字段】\n'+Object.entries(card).filter(([k,v])=>k!=='id'&&k!=='createdAt'&&v).map(([k,v])=>k+': '+v).join('\n')+'\n\n【需要补全的字段】\n'+fields.join(', ');
-      const payload = { model:state.model, messages:[{role:'system',content:sys},{role:'user',content:input}], stream:false, max_tokens:2000, temperature:0.85 };
+      const payload = buildRawRequest([{role:'system',content:sys},{role:'user',content:input}], { maxTokens: 2000, temperature: 0.85 });
       const reqHeaders = {'Content-Type':'application/json'};
-      if(state.apiKey) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
+      if(state.apiKey && !usingCf()) reqHeaders['Authorization'] = 'Bearer '+state.apiKey;
       const res = await fetch(apiEndpoint(), { method:'POST', headers:reqHeaders, body:JSON.stringify(payload) });
       if(!res.ok){ let d=''; try{d=(await res.json()).error?.message||''}catch{} throw new Error(res.status+' '+d); }
       const data = await res.json();
-      const text = data.choices?.[0]?.message?.content || '';
+      const text = extractText(data);
       let jsonStr = text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
       // 多次重试：如果首次解析失败，尝试从文本中提取首个完整 JSON 块
       let obj = null;

@@ -28,3 +28,20 @@ export const KNOWN_MODELS = [
   '@makers/minimax-m3',
   '@makers/kimi-k2.6',
 ];
+
+// 第二路内置后端：Cloudflare Workers AI（/api/cf/run，原生协议）
+// Workers AI 不提供 OpenAI 风格的 /models 接口，清单在此维护（可用环境变量 CF_MODELS 覆盖）。
+// 只留两个：均已用该账号（Workers Free 套餐）实测通过，且都是纯 instruct 模型，
+// 不会像 R1/Qwen3 那样吐 <think> 思考块污染角色演绎输出。
+// 若套餐变更导致不可用（403），改这里或配环境变量 CF_MODELS 换掉即可。
+export const CF_MODELS = [
+  '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+  '@cf/mistralai/mistral-small-3.1-24b-instruct',
+];
+
+export const DEFAULT_CF_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+
+// @cf/ 与 @hf/ 走 Cloudflare Workers AI 分支（原生协议），其余走 Makers 网关（OpenAI 兼容协议）
+export function isCfModel(id) {
+  return typeof id === 'string' && /^@(cf|hf)\//i.test(id.trim());
+}

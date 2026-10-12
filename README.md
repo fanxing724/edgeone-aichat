@@ -6,7 +6,7 @@
 
 **AI 剧场** 是一个纯前端单页应用（SPA），无需构建工具即可部署。项目利用 EdgeOne Pages 的边缘函数（Cloudflare Workers 风格 API）作为后端代理，统一接入 **Makers Models 网关**，实现：
 
-- 开箱即用的内置模型（平台侧密钥存于环境变量，前端零接触）
+- 开箱即用的**两路内置后端**：EdgeOne Makers 网关（OpenAI 兼容协议）与 Cloudflare Workers AI（原生协议）
 - 可选自定义 OpenAI 兼容 API（BYOK，密钥仅存本地）
 - 对外模型代理转发（`/v1/*`）：第三方 OpenAI 兼容客户端经本站调用 EdgeOne 模型，真实密钥不出服务端
 - **三模式切换**：剧情演绎（RP）/ 世界书（Lorebook）/ 角色卡工坊
@@ -22,9 +22,11 @@
 浏览器（index.html 单页应用）—— 同源调用，不发 CORS 头
    │
    ├── /api/cards ────────────→ 角色卡 API（KV 优先，FALLBACK 兜底）
-   ├── /api/status ───────────→ 网关状态检查（是否配置平台密钥）
+   ├── /api/status ───────────→ 两路后端状态检查（builtin / cloudflare）
    ├── /api/models ───────────→ 模型列表代理（透传 /models）
-   └── /api/chat/completions ─→ Makers Models 统一网关代理（SSE 透传）
+   ├── /api/chat/completions ─→ Makers Models 统一网关代理（SSE 透传）
+   ├── /api/cf/run ───────────→ Cloudflare Workers AI 原生代理（@cf/ 模型，SSE 透传）
+   └── /api/cf/models ────────→ Workers AI 模型清单（环境变量 CF_MODELS 或内置清单）
 
 第三方 OpenAI 兼容客户端 —— 跨域调用，带服务自有访问令牌
    │
@@ -46,8 +48,11 @@
 │   │   ├── cards.js        # 内置角色卡下发（KV 优先，代码兜底）
 │   │   ├── status.js       # 平台密钥状态查询
 │   │   ├── models.js       # 模型列表代理（支持 BYOK）
-│   │   └── chat/
-│   │       └── completions.js  # Makers Models 网关代理（SSE 流式透传）
+│   │   ├── chat/
+│   │   │   └── completions.js  # Makers Models 网关代理（SSE 流式透传）
+│   │   └── cf/             # Cloudflare Workers AI 内置后端（原生协议，不做 OpenAI 转换）
+│   │       ├── run.js      # /api/cf/run：/ai/run/<model> 原样转发（支持 SSE）
+│   │       └── models.js   # /api/cf/models：Workers AI 模型清单
 │   └── v1/                 # 对外开放代理（OpenAI 兼容、带 CORS 与访问令牌校验）
 │       ├── status.js       # 部署自查探针（免鉴权，只返回布尔值）
 │       ├── models.js       # 对外模型列表
@@ -96,10 +101,58 @@
 
 ### 🔌 模型接入
 
-- **内置模式（默认）**：平台密钥存于 Pages 环境变量 `MAKERS_MODELS_KEY`，无需用户配置即可使用
+- **内置模式（默认）**：平台密钥存于 Pages 环境变量，无需用户配置即可使用，按模型名前缀自动分流：
+  - `@makers/*` → EdgeOne Makers 网关（`MAKERS_MODELS_KEY`，OpenAI 兼容协议 `/api/chat/completions`）
+  - `@cf/*` → Cloudflare Workers AI（`CF_ACCOUNT_ID` + `CF_API_TOKEN`，原生协议 `/api/cf/run`）
 - **自定义模式（BYOK）**：支持任意 OpenAI 兼容 API 地址，密钥存于浏览器 localStorage
 - **模型名归一化**：不带 `/` 的模型名自动补 `@makers/` 前缀；带 `/` 的按 `provider/model` 原样透传
 - **内置免费模型**：DeepSeek、MiniMax、Kimi、Hy3 等（无 `/models` 接口时由前端 `BUILTIN_MODELS` 维护清单）
+- **设置页分组**：内置模式下模型下拉按 `EdgeOne Makers 内置` / `Cloudflare Workers AI` / `我的模型` 三组展示，任选即切换后端
+
+### ☁️ Cloudflare Workers AI 后端（`/api/cf/*`）
+
+Workers AI 的 `/ai/run` 是单模型端点，协议与 OpenAI 不同，**本站保持其原生格式原样转发**，由前端单独适配：
+
+| 项目 | 说明 |
+|---|---|
+| 上游 | `https://api.cloudflare.com/client/v4/accounts/<account>/ai/run/<model>` |
+| 请求体 | 原生字段直接透传（`messages` / `prompt` / `stream` / `max_tokens` / `temperature` …）；`model` 走 URL，不重复放 body |
+| 非流式响应 | `{ success, result: { response, choices:[{ message:{ content } }] } }`——实测两个字段内容一致，前端两者都兜底 |
+| 流式响应 | SSE，每片 `data: {"response":"…", choices:[{ delta:{ content:"…" } }]}`，两者同为该片增量，结束为 `data: [DONE]` |
+| 凭据 | 服务端 `CF_ACCOUNT_ID` + `CF_API_TOKEN`；也支持请求体自带 `account`/`token`（BYOK，优先使用） |
+| 已知差异 | 无 `thinking`/`reasoning_effort`/`top_p`，思考模式对 `@cf/` 模型自动不生效；输出长度受模型上限约束（默认取 2048） |
+
+**凭据已内嵌**：账户 ID 与 API Token 作为兜底常量写在 `functions/_lib/env.js`，不配环境变量即可直接用；配了 `CF_ACCOUNT_ID` / `CF_API_TOKEN` 则优先用环境变量。
+
+> ⚠ 内嵌等于把明文 Token 写进仓库。**仓库一旦公开，任何人都可拿它刷你的 Workers AI 额度**。请务必把该 Token 的权限收紧到「Workers AI 运行」，并定期轮换；公开仓库请改为只配环境变量并删除这两个常量。
+
+**内置模型（已在 Workers Free 套餐实测通过，仅两个）**：
+
+| 模型 | 定位 |
+|---|---|
+| `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | 70B 通用最强，默认模型 |
+| `@cf/mistralai/mistral-small-3.1-24b-instruct` | 24B，多语言与文风表现好 |
+
+两者都是纯 instruct 模型，不会像 R1 / Qwen3 那样吐 `<think>` 思考块污染角色演绎输出。
+
+> 实测记录：`@cf/moonshotai/kimi-k2.7-code` 与 `@cf/google/gemma-3-12b-it` 在该 Free 账号下均返回 403（前者「不在免费套餐」，后者「账号无权访问」），故未纳入。
+> 同账号下也可用但未选：`@cf/meta/llama-4-scout-17b-16e-instruct`、`@cf/qwen/qwen2.5-coder-32b-instruct`、`@cf/qwen/qwen3-30b-a3b-fp8`、`@cf/deepseek-ai/deepseek-r1-distill-qwen-32b`、`@cf/openai/gpt-oss-120b`、`@cf/meta/llama-3.1-8b-instruct`。
+
+模型清单可随时用环境变量 `CF_MODELS` 覆盖（逗号分隔），或改 `functions/_lib/model-name.js` 与前端的同名清单（两处需同步）。
+
+```bash
+# 非流式（部署后，注意：/api/* 不输出 CORS 头，仅同源页面可用）
+curl https://你的域名/api/cf/run \
+  -H "Content-Type: application/json" \
+  -d '{"model":"@cf/moonshotai/kimi-k2.7-code","messages":[{"role":"user","content":"你好"}]}'
+
+# 流式
+curl -N https://你的域名/api/cf/run \
+  -H "Content-Type: application/json" \
+  -d '{"model":"@cf/moonshotai/kimi-k2.7-code","messages":[{"role":"user","content":"你好"}],"stream":true}'
+```
+
+模型清单由环境变量 `CF_MODELS` 维护（逗号分隔），未配置时回落到 `functions/_lib/model-name.js` 的 `CF_MODELS`。
 
 ### 🔀 开放模型代理（/v1）
 
@@ -168,6 +221,9 @@ client = OpenAI(base_url="https://你的域名/v1", api_key="<访问令牌>")
 3. **设置环境变量**：
    ```
    MAKERS_MODELS_KEY=sk-xxxx             # Makers Models 网关密钥（上游，调用方不可见）
+   CF_ACCOUNT_ID=34a4ee...               # 可选：Cloudflare 账户 ID，覆盖代码内嵌值
+   CF_API_TOKEN=cfut_xxxx                # 可选：Cloudflare API Token，覆盖代码内嵌值（公开仓库务必改用它）
+   CF_MODELS=                            # 可选，逗号分隔的 Workers AI 模型清单，留空用内置清单
    PROXY_ACCESS_KEYS=your-service-key     # 本站自签发的对外访问令牌，多个用逗号分隔；不配则 /v1/* 关闭
    PROXY_ALLOWED_ORIGINS=                 # 可选，跨域来源白名单；留空表示允许任意 Origin
    ```
@@ -187,7 +243,10 @@ client = OpenAI(base_url="https://你的域名/v1", api_key="<访问令牌>")
 
 | 变量名 | 用途 | 是否必填 |
 |---|---|---|
-| `MAKERS_MODELS_KEY` | 平台侧 Makers Models 密钥，供内置模型代理使用 | 使用内置模型时必填 |
+| `MAKERS_MODELS_KEY` | 平台侧 Makers Models 密钥，供 `@makers/*` 模型使用 | 使用内置 Makers 模型时必填 |
+| `CF_ACCOUNT_ID` | Cloudflare 账户 ID（32 位十六进制），覆盖代码内嵌值 | 可选（已内嵌） |
+| `CF_API_TOKEN` | Cloudflare API Token，覆盖代码内嵌值 | 可选（已内嵌，公开仓库建议配置并删除内嵌常量） |
+| `CF_MODELS` | Workers AI 模型清单，逗号分隔，覆盖代码内置清单 | 可选 |
 | `PROXY_ACCESS_KEYS` | 对外代理 `/v1/*` 的访问令牌白名单，逗号/分号/换行分隔（单数别名 `PROXY_ACCESS_KEY` 同样识别） | 开放 `/v1/*` 时必填，未配置则该路由整体 503 |
 | `PROXY_ALLOWED_ORIGINS` | 限制可跨域调用 `/v1/*` 的浏览器来源 | 可选，留空表示 `*` |
 | `CARDS_KV` | 绑定 KV 命名空间，覆盖内置角色卡 | 可选，未配置时使用代码内兜底卡 |
@@ -198,6 +257,7 @@ client = OpenAI(base_url="https://你的域名/v1", api_key="<访问令牌>")
 - **对外代理密钥分离**：`/v1/*` 的调用方令牌只在本边缘函数内校验，校验通过后替换为服务端 `MAKERS_MODELS_KEY` 再转发，真实密钥不出现在请求、响应或调用方手里
 - **默认关闭**：未配置 `PROXY_ACCESS_KEYS` 时 `/v1/*` 整体返回 503，不会意外变成公开中继
 - **密钥分级保护**：自定义密钥只存于浏览器 localStorage；平台密钥存于服务端环境变量，前端全程接触不到
+- **Workers AI 上游固定**：`/api/cf/run` 的宿主恒为 `api.cloudflare.com`，且账户 ID（32 位十六进制）与模型名（`@vendor/model`）先经白名单校验再拼进 URL，杜绝路径穿越与 SSRF
 - **平台密钥不外流**：`/api/models` 仅在请求默认网关时使用服务端 `MAKERS_MODELS_KEY`；调用方指定自定义 `base` 时必须自带密钥，平台密钥绝不发往第三方地址（防 SSRF / 密钥盗取）
 - **模型列表请求不落 URL**：密钥通过请求体传递，不进入访问日志
 - **响应禁缓存**：所有 API 均设置 `cache-control: no-store`
