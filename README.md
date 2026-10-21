@@ -1,3 +1,16 @@
+<!-- fanxing-style:start -->
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="https://fanxing724.github.io/new-make/fanxing724/projects/edgeone-aichat/cover.light.svg">
+  <img alt="AI 剧场 · 故事开场" src="https://fanxing724.github.io/new-make/fanxing724/projects/edgeone-aichat/cover.svg" width="100%">
+</picture>
+
+**给角色一个舞台，让对话接着发生。**
+
+角色和故事需要一个可以展开的空间。这个 EdgeOne 聊天项目围绕角色对话、自定义模型与模型路由展开，给不同的创作想法留一个入口。
+
+<sub>番星 / 星轨手记 · <a href="https://fanxing724.github.io/new-make/fanxing724/projects/style.html">风格样板</a> · <a href="https://fanxing724.github.io/">个人小站</a></sub>
+<!-- fanxing-style:end -->
+
 # AI 剧场 · 沉浸式角色演绎
 
 一个基于 **EdgeOne Pages 全栈能力** 构建的沉浸式 AI 角色扮演（RP）Web 应用。用户创建或选择角色卡，通过流式对话与 AI 扮演的角色进行互动，AI 会自动推进剧情、描写场景、维护角色状态。
