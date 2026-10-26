@@ -167,7 +167,7 @@ curl -N https://你的域名/api/cf/run \
 
 角色卡工坊的「AI 补全 / 一句话生成」走**独立模型配置**，不占用剧情演绎的主模型渠道（Cloudflare 渠道优化：主模型专注演绎，结构化生成走更快的 Groq）：
 
-- **Groq 模型已锁定为 `@groq/qwen/qwen3-27b`，且 Groq 渠道仅用于角色卡工坊**（剧情演绎的主模型不开放 Groq）；旧存档保存的 `@groq/*` 会自动收敛到该锁定模型
+- **Groq 模型已锁定为 `@groq/qwen/qwen3-32b`，且 Groq 渠道仅用于角色卡工坊**（剧情演绎的主模型不开放 Groq；Groq 无 qwen3-27b，Qwen3 为 32B 版本）；旧存档保存的 `@groq/*` 会自动收敛到该锁定模型
 - 工坊页顶部「工坊模型」栏：锁定模型（默认）/「跟随主模型」/点 ✎ 手填任意模型 ID（`@groq/` 统一收敛到锁定模型，`@cf/` 走 Workers AI，其余走当前 API）
 - 凭据：服务端环境变量 `GROQ_API_KEY` 优先；未配置时用户可在工坊模型栏自带 Groq API Key（BYOK，仅存本机 localStorage，随请求体携带、服务端剥离、不落日志）
 - 上游锁定 `api.groq.com`，模型名先经白名单校验再放进请求体；`/api/groq/*` 不输出 CORS 头，仅同源可用
