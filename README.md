@@ -13,6 +13,11 @@
 <sub>番星 / 星轨手记 · <a href="https://fanxing724.github.io/new-make/projects/">风格样板</a> · <a href="https://fanxing724.github.io/">个人小站</a></sub>
 <!-- fanxing-style:end -->
 
+> [!NOTE]
+> **主库与完整版在 CNB：<https://cnb.cool/rice-King/ai-chat>**
+>
+> Issue、PR、部署说明与环境变量速查都以那边为准；本仓库是同步副本，内容可能滞后。
+
 # AI 剧场 · 沉浸式角色演绎
 
 一个基于 **EdgeOne Pages 全栈能力** 构建的沉浸式 AI 角色扮演（RP）Web 应用。用户创建或选择角色卡，通过流式对话与 AI 扮演的角色进行互动，AI 会自动推进剧情、描写场景、维护角色状态。
