@@ -1,14 +1,16 @@
 <!-- fanxing-style:start -->
+<!-- 封面来自 fanxing724/new-make 的定时渲染产物，已拉取一次存成 docs/ 下的位图快照；要更新就重新拉一次覆盖。
+     不要改成外链：那边 projects/** 随项目清单增删而变，README 只认仓库内的快照。 -->
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://fanxing724.github.io/new-make/fanxing724/projects/edgeone-aichat/cover.light.svg">
-  <img alt="AI 剧场 · 故事开场" src="https://fanxing724.github.io/new-make/fanxing724/projects/edgeone-aichat/cover.svg" width="100%">
+  <source media="(prefers-color-scheme: light)" srcset="docs/cover-light.png">
+  <img alt="AI 剧场 · 故事开场" src="docs/cover-dark.png" width="100%">
 </picture>
 
 **给角色一个舞台，让对话接着发生。**
 
 角色和故事需要一个可以展开的空间。这个 EdgeOne 聊天项目围绕角色对话、自定义模型与模型路由展开，给不同的创作想法留一个入口。
 
-<sub>番星 / 星轨手记 · <a href="https://fanxing724.github.io/new-make/fanxing724/projects/style.html">风格样板</a> · <a href="https://fanxing724.github.io/">个人小站</a></sub>
+<sub>番星 / 星轨手记 · <a href="https://fanxing724.github.io/new-make/projects/">风格样板</a> · <a href="https://fanxing724.github.io/">个人小站</a></sub>
 <!-- fanxing-style:end -->
 
 # AI 剧场 · 沉浸式角色演绎
@@ -77,7 +79,8 @@
 │       ├── models.js           # 对外模型列表
 │       └── chat/
 │           └── completions.js  # 对外对话补全转发
-├── AGENTS.md                   # 仓库描述文件：架构约定 / 改动同步清单 / 安全红线（改代码前先读）
+├── docs/                       # README 头图（位图快照，本地托管，见 AGENTS.md 图片约定）
+├── AGENTS.md                   # 仓库描述文件：架构约定 / 改动同步清单 / 安全红线 / 头图约定（改代码前先读）
 └── .gitignore
 ```
 

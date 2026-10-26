@@ -20,6 +20,7 @@ functions/api/chat/           Makers 网关代理（OpenAI 兼容，SSE 透传�
 functions/api/cf/             Cloudflare Workers AI 原生协议转发
 functions/api/groq/chat/      Groq 转发（仅角色卡工坊使用）
 functions/v1/                 对外 OpenAI 兼容代理，带 CORS + 令牌校验
+docs/                         README 位图资源（头图等），无代码
 ```
 
 **`_lib` 的引用路径是最容易踩的坑**：`_` 前缀目录不注册路由，按目录深度写相对路径——
@@ -51,6 +52,18 @@ functions/v1/                 对外 OpenAI 兼容代理，带 CORS + 令牌校�
 裸模型名（不含 `/`）自动补 `@makers/` 前缀，两套代理共用 `applyModelPrefix`（只作用于 `/api/chat/completions` 与 `/v1/chat/completions`；`/api/cf/run` 与 `/api/groq/*` 收原始模型名，不补前缀）。
 
 `@cf/*` 与 `@groq/*` 有已知差异：不支持 `thinking` / `reasoning_effort`，前端会自动降级。别在后端"贴心"地帮用户转换协议，那会让前端适配层变成两套逻辑。
+
+## README 图片约定
+
+头图和所有 README 配图**随仓库提交在 `docs/` 下，用相对路径引用**，不直连外部 Pages。
+
+为什么不做外链：上游 `fanxing724/new-make` 的封面是 Actions 整点重渲染的产物，`projects/**` 不是稳定契约（项目清单增删都会改目录）。README 只拉取一次、存成仓库内快照，展示就与上游调度彻底解耦。
+
+- 更新流程：从 `https://fanxing724.github.io/new-make/fanxing724/projects/edgeone-aichat/cover.svg`（浅色用 `cover.light.svg`）拉最新产物 → Chromium 按 2x 渲染成 PNG → 缩到 1600px 宽 → 覆盖 `docs/cover-dark.png` / `docs/cover-light.png`
+- `docs/cover-dark.png` 对应深色主题，`docs/cover-light.png` 对应浅色主题，靠 `<picture>` + `prefers-color-scheme` 切换（GitHub / CNB 都原生支持）
+- 文案出处是上游 `projects.config.json` 的 `owners.fanxing724.projects["edgeone-aichat"]`，改标题/标语要去那边改，本站只换图
+- 实测记录：GitHub 的 Camo 代理对 SVG 是**原样透传**——`cover.svg` 返回 200 / `image/svg+xml` / 39616 字节，md5 与源文件一致，`<style>`、`url(#…)`、`data:` 内嵌图都没被改写。选 PNG 是为了快照稳定和体积可控，不是被 Camo 逼的；别再把「Camo 会净化 SVG」当事实引用
+- 图挂了只影响头图，正文照常（`<picture>` 会退化成 alt 文案）
 
 ## 安全红线（改代码前先读）
 
