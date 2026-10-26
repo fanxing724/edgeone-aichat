@@ -126,17 +126,19 @@ Workers AI 的 `/ai/run` 是单模型端点，协议与 OpenAI 不同，**本站
 
 > ⚠ 内嵌等于把明文 Token 写进仓库。**仓库一旦公开，任何人都可拿它刷你的 Workers AI 额度**。请务必把该 Token 的权限收紧到「Workers AI 运行」，并定期轮换；公开仓库请改为只配环境变量并删除这两个常量。
 
-**内置模型（已在 Workers Free 套餐实测通过，仅两个）**：
+**内置模型（已在 Workers Free 套餐实测通过）**：
 
 | 模型 | 定位 |
 |---|---|
-| `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | 70B 通用最强，默认模型 |
+| `@cf/openai/gpt-oss-120b` | 120B 推理最强，默认模型 |
+| `@cf/meta/llama-4-scout-17b-16e-instruct` | Llama 4 Scout（MoE 17B 激活），长上下文表现好 |
+| `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | 70B 通用，稳定兜底 |
 | `@cf/mistralai/mistral-small-3.1-24b-instruct` | 24B，多语言与文风表现好 |
 
-两者都是纯 instruct 模型，不会像 R1 / Qwen3 那样吐 `<think>` 思考块污染角色演绎输出。
+前三者均为纯 instruct/常规输出模型，不会像 R1 / Qwen3 那样吐 `<think>` 思考块污染角色演绎输出；gpt-oss 的 Responses 风格输出（`result.output[].content[].text`）与 `response.output_text.delta` 流式事件已由前端解析层兼容，非流式文本还会自动剥离 `<think>` 块。
 
 > 实测记录：`@cf/moonshotai/kimi-k2.7-code` 与 `@cf/google/gemma-3-12b-it` 在该 Free 账号下均返回 403（前者「不在免费套餐」，后者「账号无权访问」），故未纳入。
-> 同账号下也可用但未选：`@cf/meta/llama-4-scout-17b-16e-instruct`、`@cf/qwen/qwen2.5-coder-32b-instruct`、`@cf/qwen/qwen3-30b-a3b-fp8`、`@cf/deepseek-ai/deepseek-r1-distill-qwen-32b`、`@cf/openai/gpt-oss-120b`、`@cf/meta/llama-3.1-8b-instruct`。
+> 同账号下也可用但未选：`@cf/qwen/qwen2.5-coder-32b-instruct`、`@cf/qwen/qwen3-30b-a3b-fp8`、`@cf/deepseek-ai/deepseek-r1-distill-qwen-32b`、`@cf/openai/gpt-oss-20b`、`@cf/meta/llama-3.1-8b-instruct`（qwen3 / r1 系会输出思考块，不适合直接演绎）。
 
 模型清单可随时用环境变量 `CF_MODELS` 覆盖（逗号分隔），或改 `functions/_lib/model-name.js` 与前端的同名清单（两处需同步）。
 
