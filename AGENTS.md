@@ -13,12 +13,13 @@
 ## 目录约定
 
 ```
-index.html            前端全部代码
-functions/_lib/       共享库（env / http / cors / gate / model-name）
-functions/api/        本站页面专用，同源调用，不输出 CORS 头
-functions/api/cf/     Cloudflare Workers AI 原生协议转发
-functions/api/groq/   Groq 转发（仅角色卡工坊使用）
-functions/v1/         对外 OpenAI 兼容代理，带 CORS + 令牌校验
+index.html                    前端全部代码
+functions/_lib/               共享库（env / http / cors / gate / model-name）
+functions/api/                本站页面专用，同源调用，不输出 CORS 头
+functions/api/chat/           Makers 网关代理（OpenAI 兼容，SSE 透传）
+functions/api/cf/             Cloudflare Workers AI 原生协议转发
+functions/api/groq/chat/      Groq 转发（仅角色卡工坊使用）
+functions/v1/                 对外 OpenAI 兼容代理，带 CORS + 令牌校验
 ```
 
 **`_lib` 的引用路径是最容易踩的坑**：`_` 前缀目录不注册路由，按目录深度写相对路径——
@@ -36,6 +37,7 @@ functions/v1/         对外 OpenAI 兼容代理，带 CORS + 令牌校验
 | 新增 `@cf/*` 模型 | `_lib/model-name.js` 的 `CF_MODELS` + `index.html` 的 `CF_MODELS` |
 | 新增环境变量 | `_lib/env.js` 读取 + `README.md` 环境变量速查表 + 部署说明 |
 | 改了工坊锁定模型 | `index.html` 的 `SHOP_GROQ_MODEL`（旧存档靠这个常量自动收敛） |
+| 改了 `@groq/*` 模型清单 | 前端目前**不列清单**：`isGroqModel()` 按前缀判断，工坊下拉锁定 `SHOP_GROQ_MODEL`（Groq 已退役的模型会直接 404，改常量前先查官方模型页） |
 | 改了字段结构 | 角色卡要保持酒馆 V2 round-trip，本站专有字段只能放 `data.extensions.ai_theater` |
 
 ## 模型分流（三条内置后端）
@@ -46,7 +48,7 @@ functions/v1/         对外 OpenAI 兼容代理，带 CORS + 令牌校验
 - `@cf/*` → `/api/cf/run` → Cloudflare Workers AI（**原生协议，不做 OpenAI 转换**）
 - `@groq/*` → `/api/groq/chat/completions` → Groq（**仅工坊**，剧情演绎不开放）
 
-裸模型名（不含 `/`）自动补 `@makers/` 前缀，两套代理共用 `applyModelPrefix`。
+裸模型名（不含 `/`）自动补 `@makers/` 前缀，两套代理共用 `applyModelPrefix`（只作用于 `/api/chat/completions` 与 `/v1/chat/completions`；`/api/cf/run` 与 `/api/groq/*` 收原始模型名，不补前缀）。
 
 `@cf/*` 与 `@groq/*` 有已知差异：不支持 `thinking` / `reasoning_effort`，前端会自动降级。别在后端"贴心"地帮用户转换协议，那会让前端适配层变成两套逻辑。
 
@@ -66,11 +68,11 @@ functions/v1/         对外 OpenAI 兼容代理，带 CORS + 令牌校验
 
 ```bash
 # 1. 前端：直接打开 index.html 看 UI（API 会 404，属正常）
-# 2. 边缘函数：部署后打健康探针
+# 2. 边缘函数：部署后打健康探针（需部署环境，本地无替代品）
 curl -i https://<域名>/api/health          # 恒 200，services 里看三路密钥就绪布尔值
 curl -i https://<域名>/v1/status           # { proxy, gateway }，免鉴权
-# 3. 函数语法自检（无构建工具时的最低要求）
-node --input-type=module -e "$(cat functions/api/health.js)" 2>&1 | head -3
+# 3. 语法自检：逐个函数文件过一遍解析器（直接 cat 进 node 只是执行，会因缺 onRequest 上下文报运行时错误，看不出语法问题）
+for f in $(git ls-files 'functions/**/*.js'); do node --check "$f" || echo "FAIL $f"; done
 ```
 
 临时校验脚本命名为 `.verify.mjs` / `.cardtest.mjs`（已在 `.gitignore` 里），别提交。
@@ -86,3 +88,4 @@ node --input-type=module -e "$(cat functions/api/health.js)" 2>&1 | head -3
 - 注释解释**为什么**和**约束**，不复述代码。`_lib` 每个文件顶部的"位置约束"注释是有用的，别删。
 - 前端保持单文件。想拆模块前先问：部署流程会不会因此变复杂？答案是"会"就别拆。
 - 中文文案统一用中文标点；错误信息写清"下一步该做什么"（例：让用户去配哪个环境变量）。
+- 前端模型分组按协议走（`@makers/` / `@cf/` / 其他），`@groq/` 只出现在工坊栏；新增后端时同步 `modelOptions()` 的分组条件，否则模型会掉进「我的模型」里。

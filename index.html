@@ -340,8 +340,8 @@
     // 均为同账号（Workers Free 套餐）实测可用；gpt-oss-120b 推理能力最强，作为默认模型（需与服务端清单同步）
     const CF_MODELS = ['@cf/openai/gpt-oss-120b','@cf/meta/llama-4-scout-17b-16e-instruct','@cf/meta/llama-3.3-70b-instruct-fp8-fast','@cf/mistralai/mistral-small-3.1-24b-instruct'];
     const DEFAULT_CF_MODEL = '@cf/openai/gpt-oss-120b';
-    // @cf/ 与 @hf/ 走 Workers AI 原生协议，其余走 Makers 网关的 OpenAI 兼容协议
-    function isCfModel(id){ return typeof id==='string' && /^@(cf|hf)\//i.test(id.trim()); }
+    // @cf/ 走 Workers AI 原生协议，其余走 Makers 网关的 OpenAI 兼容协议（只认 @cf/，与服务端 _lib/model-name.js 保持一致）
+    function isCfModel(id){ return typeof id==='string' && /^@cf\//i.test(id.trim()); }
     function usingCf(){ return isCfModel(state.model); }
 
     // ===== 角色卡工坊独立模型配置 =====
