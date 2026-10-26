@@ -20,6 +20,7 @@ functions/api/chat/           Makers 网关代理（OpenAI 兼容，SSE 透传�
 functions/api/cf/             Cloudflare Workers AI 原生协议转发
 functions/api/groq/chat/      Groq 转发（仅角色卡工坊使用）
 functions/v1/                 对外 OpenAI 兼容代理，带 CORS + 令牌校验
+docs/                         README 位图资源（头图等），无代码
 ```
 
 **`_lib` 的引用路径是最容易踩的坑**：`_` 前缀目录不注册路由，按目录深度写相对路径——
@@ -51,6 +52,16 @@ functions/v1/                 对外 OpenAI 兼容代理，带 CORS + 令牌校�
 裸模型名（不含 `/`）自动补 `@makers/` 前缀，两套代理共用 `applyModelPrefix`（只作用于 `/api/chat/completions` 与 `/v1/chat/completions`；`/api/cf/run` 与 `/api/groq/*` 收原始模型名，不补前缀）。
 
 `@cf/*` 与 `@groq/*` 有已知差异：不支持 `thinking` / `reasoning_effort`，前端会自动降级。别在后端"贴心"地帮用户转换协议，那会让前端适配层变成两套逻辑。
+
+## README 图片约定
+
+头图和所有 README 配图**必须是位图（PNG/WebP），且随仓库提交在 `docs/` 下**，用相对路径引用。
+
+原因：GitHub 渲染 README 走 Camo 代理，会净化 SVG 里的 `<style>`、`url(#…)` 局部引用和 `data:` 内嵌位图——正是番星风格封面的写法，结果是白图或 alt 文案。改成 PNG 后 Camo 原样透传，深/浅主题也仍可用 `<picture>` + `prefers-color-scheme` 切换。
+
+- 换图流程：改 SVG 源 → 用 Chromium 按 2x 截图/导 PNG → 缩到 1600px 宽后提交到 `docs/`，别直接引用外部 Pages 域名（目录结构一变就 404）
+- `docs/cover-dark.png` / `docs/cover-light.png` 分别对应深色、浅色主题
+- 别为了适配 Camo 去阉割 SVG 设计；需要矢量精度就放 `docs/` 里存 SVG 源，README 引 PNG
 
 ## 安全红线（改代码前先读）
 

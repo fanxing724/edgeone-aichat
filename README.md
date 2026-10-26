@@ -1,7 +1,7 @@
 <!-- fanxing-style:start -->
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://fanxing724.github.io/new-make/fanxing724/projects/edgeone-aichat/cover.light.svg">
-  <img alt="AI 剧场 · 故事开场" src="https://fanxing724.github.io/new-make/fanxing724/projects/edgeone-aichat/cover.svg" width="100%">
+  <source media="(prefers-color-scheme: light)" srcset="docs/cover-light.png">
+  <img alt="AI 剧场 · 故事开场" src="docs/cover-dark.png" width="100%">
 </picture>
 
 **给角色一个舞台，让对话接着发生。**
@@ -77,6 +77,7 @@
 │       ├── models.js           # 对外模型列表
 │       └── chat/
 │           └── completions.js  # 对外对话补全转发
+├── docs/                       # README 头图（位图，本地托管，见 AGENTS.md 图片约定）
 ├── AGENTS.md                   # 仓库描述文件：架构约定 / 改动同步清单 / 安全红线（改代码前先读）
 └── .gitignore
 ```
