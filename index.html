@@ -1274,14 +1274,17 @@
       saveState();
     }
     // 工坊模型栏：锁定的 Groq qwen3.8-27b（默认）+ 跟随主模型 + 用户手填的自定义 ID
+    // 注意：selected 必须三选一互斥——多个 option 同时带 selected 时浏览器会选中最后一个，
+    // 导致下拉框显示与 state.shopModel 不一致（表现为「选中不对/一切换就跳」）
     function renderShopModelBar(){
       const sel = $('#shopModelSel'); if(!sel) return;
       const cur = (state.shopModel||'').trim();
       const locked = cur===SHOP_GROQ_MODEL;
-      const custom = cur && !locked;
+      const custom = !!cur && !locked;
       sel.innerHTML = '<option value="'+escapeHtml(SHOP_GROQ_MODEL)+'"'+(locked?' selected':'')+'>Groq 内置 · qwen3.8-27b（仅工坊）</option>'
-        + '<option value=""'+(custom?'':' selected')+'>跟随主模型（'+escapeHtml(state.model||DEFAULT_MODEL)+'）</option>'
+        + '<option value=""'+(!cur?' selected':'')+'>跟随主模型（'+escapeHtml(state.model||DEFAULT_MODEL)+'）</option>'
         + (custom ? '<option value="'+escapeHtml(cur)+'" selected>'+escapeHtml(cur)+'</option>' : '');
+      sel.value = cur; // 双保险：显式对齐选中项与状态
       const keyInput = $('#shopGroqKeyInput');
       if(keyInput){ keyInput.hidden = !isGroqModel(cur); if(isGroqModel(cur) && keyInput.value!==state.shopGroqKey) keyInput.value = state.shopGroqKey; }
     }
@@ -1609,7 +1612,7 @@
 
     // 工坊事件绑定
     // 工坊模型栏：切换模型 / 自定义模型 ID / 自带 Groq Key（仅存本机）
-    $('#shopModelSel').onchange = ()=>{ state.shopModel = $('#shopModelSel').value; saveState(); renderShopModelBar(); toast(state.shopModel ? ('工坊模型已切换：'+state.shopModel) : '工坊将跟随主模型'); };
+    $('#shopModelSel').onchange = ()=>{ const v = $('#shopModelSel').value; if((state.shopModel||'').trim()===v) return; state.shopModel = v; saveState(); renderShopModelBar(); toast(state.shopModel ? ('工坊模型已切换：'+state.shopModel) : '工坊将跟随主模型'); };
     $('#shopModelCustom').onclick = ()=>{ const v = prompt('输入工坊模型名称：\n· 留空即跟随主模型\n· @groq/ 前缀走内置 Groq（默认锁定 '+SHOP_GROQ_MODEL+'）\n· @cf/ 前缀走 Cloudflare Workers AI\n· 其余走当前 API（自定义 API 需已配置）', state.shopModel || ''); if(v===null) return; state.shopModel = v.trim(); if(isGroqModel(state.shopModel)) state.shopModel = SHOP_GROQ_MODEL; saveState(); renderShopModelBar(); toast(state.shopModel ? ('工坊模型已设为：'+state.shopModel) : '工坊将跟随主模型'); };
     $('#shopGroqKeyInput').addEventListener('change', ()=>{ state.shopGroqKey = ($('#shopGroqKeyInput').value||'').trim(); saveState(); toast(state.shopGroqKey ? 'Groq Key 已保存（仅存本机）' : '已清除 Groq Key'); });
     document.querySelectorAll('.ai-fill-btn[data-fill]').forEach(b=>b.onclick=()=>{ if(state.busy){ stopShopAi(); return; } aiFillCard(b.dataset.fill); });
