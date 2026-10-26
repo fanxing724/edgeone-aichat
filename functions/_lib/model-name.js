@@ -45,7 +45,9 @@ export const CF_MODELS = [
 
 export const DEFAULT_CF_MODEL = '@cf/openai/gpt-oss-120b';
 
-// @cf/ 与 @hf/ 走 Cloudflare Workers AI 分支（原生协议），其余走 Makers 网关（OpenAI 兼容协议）
+// @cf/ 走 Cloudflare Workers AI 分支（原生协议），其余走 Makers 网关（OpenAI 兼容协议）
+// 注意：只认 @cf/。Workers AI 的模型 ID 可能带多级子路径（@cf/meta/llama-…），用单段前缀判断，别再拼 @hf/——
+// 旧版把 @hf/ 也并进来，但该前缀从未产出过合法 Worker AI 模型名，只会让「前后端模型清单一致」这条约定失效。
 export function isCfModel(id) {
-  return typeof id === 'string' && /^@(cf|hf)\//i.test(id.trim());
+  return typeof id === 'string' && /^@cf\//i.test(id.trim());
 }

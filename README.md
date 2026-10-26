@@ -53,17 +53,18 @@
 │   │   ├── models.js       # 模型列表代理（支持 BYOK）
 │   │   ├── chat/
 │   │   │   └── completions.js  # Makers Models 网关代理（SSE 流式透传）
-│   │   └── cf/             # Cloudflare Workers AI 内置后端（原生协议，不做 OpenAI 转换）
-│   │       ├── run.js      # /api/cf/run：/ai/run/<model> 原样转发（支持 SSE）
-│   │       └── models.js   # /api/cf/models：Workers AI 模型清单
-│   │   └── groq/           # Groq 内置后端（OpenAI 兼容，角色卡工坊独立模型配置默认使用）
+│   │   ├── cf/                 # Cloudflare Workers AI 内置后端（原生协议，不做 OpenAI 转换）
+│   │   │   ├── run.js          # /api/cf/run：/ai/run/<model> 原样转发（支持 SSE）
+│   │   │   └── models.js       # /api/cf/models：Workers AI 模型清单
+│   │   └── groq/               # Groq 内置后端（OpenAI 兼容，角色卡工坊独立模型配置默认使用）
 │   │       └── chat/
 │   │           └── completions.js  # /api/groq/chat/completions：转发 api.groq.com（支持 BYOK）
-│   └── v1/                 # 对外开放代理（OpenAI 兼容、带 CORS 与访问令牌校验）
-│       ├── status.js       # 部署自查探针（免鉴权，只返回布尔值）
-│       ├── models.js       # 对外模型列表
+│   └── v1/                     # 对外开放代理（OpenAI 兼容、带 CORS 与访问令牌校验）
+│       ├── status.js           # 部署自查探针（免鉴权，只返回布尔值）
+│       ├── models.js           # 对外模型列表
 │       └── chat/
 │           └── completions.js  # 对外对话补全转发
+├── AGENTS.md                   # 仓库描述文件：架构约定 / 改动同步清单 / 安全红线（改代码前先读）
 └── .gitignore
 ```
 
@@ -285,6 +286,8 @@ client = OpenAI(base_url="https://你的域名/v1", api_key="<访问令牌>")
 ## 开发调试
 
 无需任何构建工具。本地直接打开 `index.html` 即可调试 UI（API 调用会 404，需部署后联调）。部署后可在 EdgeOne 控制台查看边缘函数日志。
+
+要改代码（包括让 AI 帮你改）请先读 [AGENTS.md](./AGENTS.md)：那里只写「从代码里读不出来、但必须知道」的硬约定——`_lib` 引用层级、模型清单双处同步、安全红线。功能细节则以本文件为准。
 
 ## 开源协议
 
