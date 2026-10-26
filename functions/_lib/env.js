@@ -34,21 +34,26 @@ export function hasAccessKeys(env) {
 }
 
 // Cloudflare Workers AI 内置后端：账户 ID 与 API Token 必须同时配置才算就绪
-// 只读环境变量，代码里不保留任何明文凭据。历史上这里曾有内嵌兜底常量，
-// 后果是 GitHub 推送直接被 push protection 拦住（Cloudflare API Token 判定），
-// 历史提交里也留下了永久明文——别再往仓库写密钥，没有环境变量就让 /api/cf/* 保持未就绪。
+// 内嵌兜底凭据：未配置环境变量时直接使用，开箱即用（改密钥时优先配环境变量覆盖，无需改代码）
+// ⚠ 这是明文 API Token，会随代码进仓库。仓库一旦公开即等于泄露，请务必：
+//   1) 在 Cloudflare 控制台把该 Token 的可用范围收紧到「Account → Workers AI → 读/运行」；
+//   2) 定期轮换（轮换后改这里或配 CF_API_TOKEN 环境变量）；
+//   3) 若仓库公开，改为只配环境变量 CF_ACCOUNT_ID / CF_API_TOKEN，并删掉这两个常量。
+const EMBEDDED_CF_ACCOUNT_ID = '34a4ee2f0e5cc51e92076cd2bc797cc0';
+const EMBEDDED_CF_API_TOKEN = 'cfut_m43kga2JNhprNrHr3J24fgkOePzliXquZI3JMqCf8940289c';
+
 export function cfAccountId(env) {
   const fromContext = env && env.CF_ACCOUNT_ID;
   if (fromContext) return String(fromContext).trim();
   if (typeof CF_ACCOUNT_ID !== 'undefined' && CF_ACCOUNT_ID) return String(CF_ACCOUNT_ID).trim();
-  return '';
+  return EMBEDDED_CF_ACCOUNT_ID;
 }
 
 export function cfApiToken(env) {
   const fromContext = env && env.CF_API_TOKEN;
   if (fromContext) return String(fromContext).trim();
   if (typeof CF_API_TOKEN !== 'undefined' && CF_API_TOKEN) return String(CF_API_TOKEN).trim();
-  return '';
+  return EMBEDDED_CF_API_TOKEN;
 }
 
 export function cfReady(env) {
