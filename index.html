@@ -345,13 +345,15 @@
     function usingCf(){ return isCfModel(state.model); }
 
     // ===== 角色卡工坊独立模型配置 =====
-    // 工坊的 AI 补全/一句话生成默认走内置 Groq 的锁定模型 qwen3-32b（结构化 JSON 任务，
+    // 工坊的 AI 补全/一句话生成默认走内置 Groq 的锁定模型 qwen3.8-27b（结构化 JSON 任务，
     // 快且免费额度充足），不占用剧情演绎的主模型渠道；Groq 渠道仅工坊可用。
     // 也可在工坊模型栏改为「跟随主模型」或手填任意模型 ID：
     // @groq/ 前缀走 Groq 路由（统一收敛到锁定模型），@cf/|@hf/ 前缀走 Cloudflare Workers AI，其余走当前 API。
     // Groq 渠道已锁定为单一模型，且仅用于角色卡工坊（剧情演绎的主模型不可选 Groq）
-    // 注意：Groq 官方模型清单里没有 qwen3-27b（404: does not exist），Qwen3 为 32B 版本
-    const SHOP_GROQ_MODEL = '@groq/qwen/qwen3-32b';
+    // 模型沿革（2026-10 核实）：qwen3-32b 已于 2026-07-17 退役；当前 Qwen 27B 为预览版
+    // qwen3.8-27b（另有 qwen/qwen3.6-27b）。预览版可能下线，失效时改此常量即可：
+    // 有效清单可用 curl https://api.groq.com/openai/v1/models -H "Authorization: Bearer gsk_…" 查询
+    const SHOP_GROQ_MODEL = '@groq/qwen/qwen3.8-27b';
     const DEFAULT_SHOP_MODEL = SHOP_GROQ_MODEL;
     function isGroqModel(id){ return typeof id==='string' && /^@groq\//i.test(id.trim()); }
 
@@ -393,7 +395,7 @@
       state.play = saved.play && typeof saved.play==='object' ? saved.play : {};
       state.globalPrompt = typeof saved.globalPrompt==='string' ? saved.globalPrompt : '';
       state.model = typeof saved.model==='string' && saved.model.trim() ? saved.model.trim() : DEFAULT_MODEL;
-      // 工坊独立模型：留空表示跟随主模型；默认走锁定的 Groq qwen3-32b，旧存档里的 @groq/* 一并收敛
+      // 工坊独立模型：留空表示跟随主模型；默认走锁定的 Groq qwen3.8-27b，旧存档里的 @groq/* 一并收敛
       state.shopModel = typeof saved.shopModel==='string' ? saved.shopModel.trim() : DEFAULT_SHOP_MODEL;
       if(isGroqModel(state.shopModel)) state.shopModel = SHOP_GROQ_MODEL;
       state.shopGroqKey = '';
@@ -1271,13 +1273,13 @@
       state.shopForm = hasContent ? Object.assign(card, {_editingId: state.shopEditingId||'', _tpl: state.shopActiveTpl||'', _savedAt: now()}) : null;
       saveState();
     }
-    // 工坊模型栏：锁定的 Groq qwen3-32b（默认）+ 跟随主模型 + 用户手填的自定义 ID
+    // 工坊模型栏：锁定的 Groq qwen3.8-27b（默认）+ 跟随主模型 + 用户手填的自定义 ID
     function renderShopModelBar(){
       const sel = $('#shopModelSel'); if(!sel) return;
       const cur = (state.shopModel||'').trim();
       const locked = cur===SHOP_GROQ_MODEL;
       const custom = cur && !locked;
-      sel.innerHTML = '<option value="'+escapeHtml(SHOP_GROQ_MODEL)+'"'+(locked?' selected':'')+'>Groq 内置 · qwen3-32b（仅工坊）</option>'
+      sel.innerHTML = '<option value="'+escapeHtml(SHOP_GROQ_MODEL)+'"'+(locked?' selected':'')+'>Groq 内置 · qwen3.8-27b（仅工坊）</option>'
         + '<option value=""'+(custom?'':' selected')+'>跟随主模型（'+escapeHtml(state.model||DEFAULT_MODEL)+'）</option>'
         + (custom ? '<option value="'+escapeHtml(cur)+'" selected>'+escapeHtml(cur)+'</option>' : '');
       const keyInput = $('#shopGroqKeyInput');
