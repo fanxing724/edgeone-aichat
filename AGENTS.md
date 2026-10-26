@@ -96,21 +96,13 @@ for f in $(git ls-files 'functions/**/*.js'); do node --check "$f" || echo "FAIL
 - Issue 里改了代码就开 PR，别重复建；PR 在源分支上继续改
 - 改了行为就同步 `README.md`——这个仓库的 README 是**运维手册**，环境变量表、模型清单、安全设计都是靠它活的
 
-### 镜像仓库（GitHub / Gitee）
+### 仓库拓扑（CNB / GitHub / Gitee）
 
-主库在 CNB，另有两个镜像：`fanxing724/edgeone-aichat`（GitHub）、`knight3fax/ai-chat`（Gitee）。
+- `cnb.cool/rice-King/ai-chat` —— 主库，日常开发都在这里；保留 `_lib/env.js` 的内嵌 CF 兜底凭据
+- `gitee.com/knight3fax/ai-chat` —— 镜像，历史与主库一致，`git push <gitee-url> main:main` 快进即可
+- `github.com/fanxing724/edgeone-aichat` —— **独立版本**，不是镜像：`functions/_lib/env.js` 里没有内嵌凭据（GitHub 的 push protection 会拦），部署侧必须配 `CF_ACCOUNT_ID` + `CF_API_TOKEN`
 
-- Gitee 与 CNB 历史一致，直接 `git push <gitee-url> main:main` 即可快进
-- **GitHub 不能直接推**：它的 `main` 有本仓没有的提交（`78fd3ca` 开源协议、`d7e4786` README 头图），历史已分叉。按「同步提交」推，保住对端历史：
-
-  ```bash
-  git fetch https://github.com/fanxing724/edgeone-aichat.git 'main:refs/remotes/gh/main'
-  tree=$(git rev-parse 'main^{tree}')
-  sync=$(git commit-tree "$tree" -p refs/remotes/gh/main -m 'sync: 同步 CNB main')
-  git push https://github.com/fanxing724/edgeone-aichat.git "${sync}:refs/heads/main"
-  ```
-
-- 提交历史里还躺着已删除的内嵌 CF 凭据，所以**别对 GitHub 做整历史推送**（push protection 会直接拒绝），同步提交只带一个干净快照，正好绕开
+三条历史互不推平：**别把主库整条历史推到 GitHub**（含旧提交里的明文 Token，必被拒），也别从 GitHub 往回拉。GitHub 那边要更新内容，按「干净快照」单独做一个提交推上去，不要指望 `git push` 直连能成。
 
 ## 风格
 
