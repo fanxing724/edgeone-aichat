@@ -20,13 +20,16 @@ export function hasModel(payload) {
 }
 
 export const KNOWN_MODELS = [
-  '@makers/deepseek-v4-flash',
-  '@makers/deepseek-v4-pro',
   '@makers/hy3',
   '@makers/hy3-preview',
-  '@makers/minimax-m2.7',
+  '@makers/deepseek-v4-pro',
+  '@makers/deepseek-v4-flash',
+  '@makers/deepseek-v4.1-flash',
   '@makers/minimax-m3',
+  '@makers/minimax-m2.7',
   '@makers/kimi-k2.6',
+  '@makers/zhuque-text',
+  '@makers/jev',
 ];
 
 // 第二路内置后端：Cloudflare Workers AI（/api/cf/run，原生协议）
