@@ -146,9 +146,9 @@ Workers AI 的 `/ai/run` 是单模型端点，协议与 OpenAI 不同，**本站
 | 凭据 | 服务端 `CF_ACCOUNT_ID` + `CF_API_TOKEN`；也支持请求体自带 `account`/`token`（BYOK，优先使用） |
 | 已知差异 | 无 `thinking`/`reasoning_effort`/`top_p`，思考模式对 `@cf/` 模型自动不生效；输出长度受模型上限约束（默认取 2048） |
 
-**凭据已内嵌**：账户 ID 与 API Token 作为兜底常量写在 `functions/_lib/env.js`，不配环境变量即可直接用；配了 `CF_ACCOUNT_ID` / `CF_API_TOKEN` 则优先用环境变量。
+**凭据只走环境变量**：`CF_ACCOUNT_ID` / `CF_API_TOKEN` 必须由部署环境提供，代码里不留明文常量。两者缺一，`/api/cf/*` 即视为未就绪（`/api/status` 里 `cloudflare` 为 `false`，前端该组模型不可用）。
 
-> ⚠ 内嵌等于把明文 Token 写进仓库。**仓库一旦公开，任何人都可拿它刷你的 Workers AI 额度**。请务必把该 Token 的权限收紧到「Workers AI 运行」，并定期轮换；公开仓库请改为只配环境变量并删除这两个常量。
+> 历史版本曾在 `functions/_lib/env.js` 内嵌这对凭据，后果是 GitHub 的 push protection 直接拦下推送、密钥也永久留在提交历史里。**不要再往代码里写任何密钥**，轮换请直接改部署环境变量。
 
 **内置模型（已在 Workers Free 套餐实测通过）**：
 
@@ -256,8 +256,8 @@ client = OpenAI(base_url="https://你的域名/v1", api_key="<访问令牌>")
 3. **设置环境变量**：
    ```
    MAKERS_MODELS_KEY=sk-xxxx             # Makers Models 网关密钥（上游，调用方不可见）
-   CF_ACCOUNT_ID=34a4ee...               # 可选：Cloudflare 账户 ID，覆盖代码内嵌值
-   CF_API_TOKEN=cfut_xxxx                # 可选：Cloudflare API Token，覆盖代码内嵌值（公开仓库务必改用它）
+   CF_ACCOUNT_ID=34a4ee...               # 用 @cf/* 模型时必填：Cloudflare 账户 ID（32 位十六进制）
+   CF_API_TOKEN=cfut_xxxx                # 用 @cf/* 模型时必填：Cloudflare API Token（只在部署环境配置，不入库）
    CF_MODELS=                            # 可选，逗号分隔的 Workers AI 模型清单，留空用内置清单
    GROQ_API_KEY=gsk_xxxx                 # 可选：Groq 密钥，角色卡工坊独立模型使用；不配则由用户在工坊页自带 BYOK
    PROXY_ACCESS_KEYS=your-service-key     # 本站自签发的对外访问令牌，多个用逗号分隔；不配则 /v1/* 关闭
@@ -280,8 +280,8 @@ client = OpenAI(base_url="https://你的域名/v1", api_key="<访问令牌>")
 | 变量名 | 用途 | 是否必填 |
 |---|---|---|
 | `MAKERS_MODELS_KEY` | 平台侧 Makers Models 密钥，供 `@makers/*` 模型使用 | 使用内置 Makers 模型时必填 |
-| `CF_ACCOUNT_ID` | Cloudflare 账户 ID（32 位十六进制），覆盖代码内嵌值 | 可选（已内嵌） |
-| `CF_API_TOKEN` | Cloudflare API Token，覆盖代码内嵌值 | 可选（已内嵌，公开仓库建议配置并删除内嵌常量） |
+| `CF_ACCOUNT_ID` | Cloudflare 账户 ID（32 位十六进制），`@cf/*` 模型使用 | 使用 `@cf/*` 时必填（代码内无兜底） |
+| `CF_API_TOKEN` | Cloudflare API Token，`@cf/*` 模型使用 | 使用 `@cf/*` 时必填（代码内无兜底，请勿入库） |
 | `CF_MODELS` | Workers AI 模型清单，逗号分隔，覆盖代码内置清单 | 可选 |
 | `GROQ_API_KEY` | Groq 密钥，供 `@groq/*`（角色卡工坊独立模型）使用；未配置时前端可 BYOK | 可选（不配则工坊需用户自带 Key 或跟随主模型） |
 | `PROXY_ACCESS_KEYS` | 对外代理 `/v1/*` 的访问令牌白名单，逗号/分号/换行分隔（单数别名 `PROXY_ACCESS_KEY` 同样识别） | 开放 `/v1/*` 时必填，未配置则该路由整体 503 |
