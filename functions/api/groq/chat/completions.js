@@ -11,8 +11,13 @@
 // - 安全：宿主固定为 api.groq.com，模型名做白名单校验后再放进请求体；不输出 CORS 头，
 //   仅允许同源页面调用；密钥只进 Authorization 头，绝不回传前端。
 
-import { groqApiKey } from '../../_lib/env.js';
-import { jsonResponse } from '../../_lib/http.js';
+// 位置约束：本文件位于 functions/api/groq/chat/（三层），引用共享库必须写
+// ../../../_lib/x.js；写错层级部署构建会报 Could not resolve，导致该路由 404。
+// 路由引用按目录深度写相对路径：functions/api/x.js → ../_lib/x.js；
+// functions/api/<sub>/x.js → ../../_lib/x.js；functions/api/<a>/<b>/x.js → ../../../_lib/x.js。
+
+import { groqApiKey } from '../../../_lib/env.js';
+import { jsonResponse } from '../../../_lib/http.js';
 
 const GROQ_HOST = 'https://api.groq.com';
 // Groq 模型 ID：每段以字母或数字开头，段内可含 . _ -，允许 / 分段（如 openai/gpt-oss-120b）
