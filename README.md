@@ -22,11 +22,13 @@
 浏览器（index.html 单页应用）—— 同源调用，不发 CORS 头
    │
    ├── /api/cards ────────────→ 角色卡 API（KV 优先，FALLBACK 兜底）
-   ├── /api/status ───────────→ 两路后端状态检查（builtin / cloudflare）
+   ├── /api/status ───────────→ 三路后端状态检查（builtin / cloudflare / groq）
+   ├── /api/health ───────────→ 健康检查探针（恒 200，附带后端就绪布尔值，支持 HEAD）
    ├── /api/models ───────────→ 模型列表代理（透传 /models）
    ├── /api/chat/completions ─→ Makers Models 统一网关代理（SSE 透传）
    ├── /api/cf/run ───────────→ Cloudflare Workers AI 原生代理（@cf/ 模型，SSE 透传）
-   └── /api/cf/models ────────→ Workers AI 模型清单（环境变量 CF_MODELS 或内置清单）
+   ├── /api/cf/models ────────→ Workers AI 模型清单（环境变量 CF_MODELS 或内置清单）
+   └── /api/groq/chat/completions → Groq 内置代理（@groq/ 模型，角色卡工坊默认走这一路）
 
 第三方 OpenAI 兼容客户端 —— 跨域调用，带服务自有访问令牌
    │
@@ -47,12 +49,16 @@
 │   ├── api/                # 本站页面专用（同源、无 CORS 头）
 │   │   ├── cards.js        # 内置角色卡下发（KV 优先，代码兜底）
 │   │   ├── status.js       # 平台密钥状态查询
+│   │   ├── health.js       # 健康检查探针（uptime 监控用，恒 200）
 │   │   ├── models.js       # 模型列表代理（支持 BYOK）
 │   │   ├── chat/
 │   │   │   └── completions.js  # Makers Models 网关代理（SSE 流式透传）
 │   │   └── cf/             # Cloudflare Workers AI 内置后端（原生协议，不做 OpenAI 转换）
 │   │       ├── run.js      # /api/cf/run：/ai/run/<model> 原样转发（支持 SSE）
 │   │       └── models.js   # /api/cf/models：Workers AI 模型清单
+│   │   └── groq/           # Groq 内置后端（OpenAI 兼容，角色卡工坊独立模型配置默认使用）
+│   │       └── chat/
+│   │           └── completions.js  # /api/groq/chat/completions：转发 api.groq.com（支持 BYOK）
 │   └── v1/                 # 对外开放代理（OpenAI 兼容、带 CORS 与访问令牌校验）
 │       ├── status.js       # 部署自查探针（免鉴权，只返回布尔值）
 │       ├── models.js       # 对外模型列表
@@ -104,6 +110,7 @@
 - **内置模式（默认）**：平台密钥存于 Pages 环境变量，无需用户配置即可使用，按模型名前缀自动分流：
   - `@makers/*` → EdgeOne Makers 网关（`MAKERS_MODELS_KEY`，OpenAI 兼容协议 `/api/chat/completions`）
   - `@cf/*` → Cloudflare Workers AI（`CF_ACCOUNT_ID` + `CF_API_TOKEN`，原生协议 `/api/cf/run`）
+  - `@groq/*` → Groq（`GROQ_API_KEY`，OpenAI 兼容协议 `/api/groq/chat/completions`）
 - **自定义模式（BYOK）**：支持任意 OpenAI 兼容 API 地址，密钥存于浏览器 localStorage
 - **模型名归一化**：不带 `/` 的模型名自动补 `@makers/` 前缀；带 `/` 的按 `provider/model` 原样透传
 - **内置免费模型**：DeepSeek、MiniMax、Kimi、Hy3 等（无 `/models` 接口时由前端 `BUILTIN_MODELS` 维护清单）
@@ -155,6 +162,15 @@ curl -N https://你的域名/api/cf/run \
 ```
 
 模型清单由环境变量 `CF_MODELS` 维护（逗号分隔），未配置时回落到 `functions/_lib/model-name.js` 的 `CF_MODELS`。
+
+### 🧩 角色卡工坊独立模型（`@groq/*`）
+
+角色卡工坊的「AI 补全 / 一句话生成」走**独立模型配置**，不占用剧情演绎的主模型渠道（Cloudflare 渠道优化：主模型专注演绎，结构化生成走更快的 Groq）：
+
+- **Groq 模型已锁定为 `@groq/qwen/qwen3-27b`，且 Groq 渠道仅用于角色卡工坊**（剧情演绎的主模型不开放 Groq）；旧存档保存的 `@groq/*` 会自动收敛到该锁定模型
+- 工坊页顶部「工坊模型」栏：锁定模型（默认）/「跟随主模型」/点 ✎ 手填任意模型 ID（`@groq/` 统一收敛到锁定模型，`@cf/` 走 Workers AI，其余走当前 API）
+- 凭据：服务端环境变量 `GROQ_API_KEY` 优先；未配置时用户可在工坊模型栏自带 Groq API Key（BYOK，仅存本机 localStorage，随请求体携带、服务端剥离、不落日志）
+- 上游锁定 `api.groq.com`，模型名先经白名单校验再放进请求体；`/api/groq/*` 不输出 CORS 头，仅同源可用
 
 ### 🔀 开放模型代理（/v1）
 
@@ -226,6 +242,7 @@ client = OpenAI(base_url="https://你的域名/v1", api_key="<访问令牌>")
    CF_ACCOUNT_ID=34a4ee...               # 可选：Cloudflare 账户 ID，覆盖代码内嵌值
    CF_API_TOKEN=cfut_xxxx                # 可选：Cloudflare API Token，覆盖代码内嵌值（公开仓库务必改用它）
    CF_MODELS=                            # 可选，逗号分隔的 Workers AI 模型清单，留空用内置清单
+   GROQ_API_KEY=gsk_xxxx                 # 可选：Groq 密钥，角色卡工坊独立模型使用；不配则由用户在工坊页自带 BYOK
    PROXY_ACCESS_KEYS=your-service-key     # 本站自签发的对外访问令牌，多个用逗号分隔；不配则 /v1/* 关闭
    PROXY_ALLOWED_ORIGINS=                 # 可选，跨域来源白名单；留空表示允许任意 Origin
    ```
@@ -249,6 +266,7 @@ client = OpenAI(base_url="https://你的域名/v1", api_key="<访问令牌>")
 | `CF_ACCOUNT_ID` | Cloudflare 账户 ID（32 位十六进制），覆盖代码内嵌值 | 可选（已内嵌） |
 | `CF_API_TOKEN` | Cloudflare API Token，覆盖代码内嵌值 | 可选（已内嵌，公开仓库建议配置并删除内嵌常量） |
 | `CF_MODELS` | Workers AI 模型清单，逗号分隔，覆盖代码内置清单 | 可选 |
+| `GROQ_API_KEY` | Groq 密钥，供 `@groq/*`（角色卡工坊独立模型）使用；未配置时前端可 BYOK | 可选（不配则工坊需用户自带 Key 或跟随主模型） |
 | `PROXY_ACCESS_KEYS` | 对外代理 `/v1/*` 的访问令牌白名单，逗号/分号/换行分隔（单数别名 `PROXY_ACCESS_KEY` 同样识别） | 开放 `/v1/*` 时必填，未配置则该路由整体 503 |
 | `PROXY_ALLOWED_ORIGINS` | 限制可跨域调用 `/v1/*` 的浏览器来源 | 可选，留空表示 `*` |
 | `CARDS_KV` | 绑定 KV 命名空间，覆盖内置角色卡 | 可选，未配置时使用代码内兜底卡 |

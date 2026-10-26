@@ -12,6 +12,7 @@
 // - CF_ACCOUNT_ID         Cloudflare 账户 ID（32 位十六进制），Workers AI 内置后端
 // - CF_API_TOKEN          Cloudflare API Token，Workers AI 内置后端
 // - CF_MODELS             可选：逗号分隔的 Workers AI 模型清单，覆盖代码内置清单
+// - GROQ_API_KEY          Groq 密钥（/api/groq 内置后端，角色卡工坊独立模型配置默认走这一路）
 
 export function platformKey(env) {
   const fromContext = env && env.MAKERS_MODELS_KEY;
@@ -66,6 +67,15 @@ export function cfModelList(env) {
   if (!raw.trim() && typeof CF_MODELS !== 'undefined' && CF_MODELS) raw = String(CF_MODELS);
   const ids = raw.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
   return ids.length ? ids : null;
+}
+
+// Groq 内置后端（角色卡工坊独立模型）：无内嵌兜底密钥（Groq 免费注册即得，不宜明文入库）。
+// 未配置环境变量时，前端可在工坊模型栏自带 BYOK 密钥，请求体携带、服务端剥离、不落日志。
+export function groqApiKey(env) {
+  const fromContext = env && env.GROQ_API_KEY;
+  if (fromContext) return String(fromContext).trim();
+  if (typeof GROQ_API_KEY !== 'undefined' && GROQ_API_KEY) return String(GROQ_API_KEY).trim();
+  return '';
 }
 
 export function allowedOrigins(env) {
