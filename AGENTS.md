@@ -96,6 +96,22 @@ for f in $(git ls-files 'functions/**/*.js'); do node --check "$f" || echo "FAIL
 - Issue 里改了代码就开 PR，别重复建；PR 在源分支上继续改
 - 改了行为就同步 `README.md`——这个仓库的 README 是**运维手册**，环境变量表、模型清单、安全设计都是靠它活的
 
+### 镜像仓库（GitHub / Gitee）
+
+主库在 CNB，另有两个镜像：`fanxing724/edgeone-aichat`（GitHub）、`knight3fax/ai-chat`（Gitee）。
+
+- Gitee 与 CNB 历史一致，直接 `git push <gitee-url> main:main` 即可快进
+- **GitHub 不能直接推**：它的 `main` 有本仓没有的提交（`78fd3ca` 开源协议、`d7e4786` README 头图），历史已分叉。按「同步提交」推，保住对端历史：
+
+  ```bash
+  git fetch https://github.com/fanxing724/edgeone-aichat.git 'main:refs/remotes/gh/main'
+  tree=$(git rev-parse 'main^{tree}')
+  sync=$(git commit-tree "$tree" -p refs/remotes/gh/main -m 'sync: 同步 CNB main')
+  git push https://github.com/fanxing724/edgeone-aichat.git "${sync}:refs/heads/main"
+  ```
+
+- 提交历史里还躺着已删除的内嵌 CF 凭据，所以**别对 GitHub 做整历史推送**（push protection 会直接拒绝），同步提交只带一个干净快照，正好绕开
+
 ## 风格
 
 - 注释解释**为什么**和**约束**，不复述代码。`_lib` 每个文件顶部的"位置约束"注释是有用的，别删。
